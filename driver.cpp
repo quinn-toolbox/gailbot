@@ -167,8 +167,9 @@ void extract_audio(vector<string> all_files)
 		std::size_t pos1 = curr_path.find_last_of("/");
 		new_path = "."+curr_path.substr(pos1,pos-pos1);
 	}
-	string command = "ffmpeg -i "+ curr_path + " -map 0:1 -c copy -ar 16000 "+ new_path +"-speaker1.wav -map 0:2 -c copy -ar 16000 "+ new_path +"-speaker2.wav";
+	string command = "ffmpeg -i "+ curr_path + " -map 0:1 -c copy -acodec pcm_s16le -ar 16000 "+ new_path +"-speaker1.wav -map 0:2 -c copy -acodec pcm_s16le -ar 16000 "+ new_path +"-speaker2.wav";
 	const char *command_final = create_char_point(command);
+	cout << command_final << endl;
 	system(command_final);
 }
 

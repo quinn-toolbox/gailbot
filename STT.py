@@ -460,6 +460,7 @@ def combined_postprocessing(data1,data2):
     all_lines = extra_spaces(all_lines)
     all_lines = overlaps(all_lines)
     all_lines = pauses(all_lines)
+    all_lines = add_end_spacing(all_lines)
     all_lines = combined_same_concat(all_lines)
     all_lines = eol_delim(all_lines)
     all_lines = rem_pause_ID(all_lines)
@@ -548,6 +549,17 @@ def comment_hesitation(all_lines):
     all_lines = sorted(all_lines, key = itemgetter(1))
     return all_lines
 
+
+# Function that adds spacing to the start and end of 
+# an utterance
+def add_end_spacing(all_lines):
+    for item in all_lines:
+        trans = item[-1]
+        trans = ' '+trans+' '
+        item[-1] = trans
+    return all_lines
+
+
 # Function that adds overlap markers based on time
 # Meant for combined post-processing
 # Modified so that this no longer adds overlap markers
@@ -604,8 +616,8 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
-                        all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
+                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'!'+all_lines[count][-1][utt_1_overlap_end:]
+                        all_lines[count+1][-1] = all_lines[count+1][-1]+'@'
 
                     # Case 1 b:
                         # ebt is negative means that overlap ends at utterance 1 end
@@ -630,16 +642,16 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1]+'> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
+                        all_lines[count][-1] = all_lines[count][-1]+'!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'@'+all_lines[count+1][-1][utt_2_overlap_end:]
                         #print(y)
 
                     # Case 1 c:
                         # ebt is 0 means that the overlap ends at both utterances end
                     elif end_boundry_time == 0:
                         #print('end == 0')
-                        all_lines[count][-1] = all_lines[count][-1] + '> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1] +'> [<] '
+                        all_lines[count][-1] = all_lines[count][-1] + '!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1] +'@'
 
                 # Case 2:
                 # Sbt is negative means that overlap starts from start of utterance 1
@@ -679,8 +691,8 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
-                        all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
+                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'!'+all_lines[count][-1][utt_1_overlap_end:]
+                        all_lines[count+1][-1] = all_lines[count+1][-1]+'@'
 
 
                     # Case 2 b:
@@ -699,15 +711,15 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1]+'> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
+                        all_lines[count][-1] = all_lines[count][-1]+'!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'@'+all_lines[count+1][-1][utt_2_overlap_end:]
 
                     # Case 2 c:
                         # ebt is 0 means that overlap ends at both utterances end.
                     elif end_boundry_time == 0:
                         #print('end == 0')
-                        all_lines[count][-1] = all_lines[count][-1] + '> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1] +'> [<] '
+                        all_lines[count][-1] = all_lines[count][-1] + '!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1] +'@'
 
                 # Case 3: 
                 # sbt is 0 means that the overlap starts from the start of both turns.
@@ -735,8 +747,8 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
-                        all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
+                        all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'!'+all_lines[count][-1][utt_1_overlap_end:]
+                        all_lines[count+1][-1] = all_lines[count+1][-1]+'@'
 
                     # Case 3 b:
                         # ebt is negative means that overlap ends at utterance 1 end
@@ -754,15 +766,15 @@ def overlaps(all_lines):
                             count+=1
                             continue
                         #print('y: ',y)
-                        all_lines[count][-1] = all_lines[count][-1]+'> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
+                        all_lines[count][-1] = all_lines[count][-1]+'!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'@'+all_lines[count+1][-1][utt_2_overlap_end:]
 
                     # Case 3 c:
                         # ebt is 0 means that overlap ends at both utterances end.
                     elif end_boundry_time == 0:
                         #print('end == 0')
-                        all_lines[count][-1] = all_lines[count][-1] + '> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1] +'> [<] ' 
+                        all_lines[count][-1] = all_lines[count][-1] + '!'
+                        all_lines[count+1][-1] = all_lines[count+1][-1] +'@' 
                 count+=1
             else:
                 count+=1
@@ -771,6 +783,43 @@ def overlaps(all_lines):
             count+=2
         elif all_lines[count][0] == all_lines[count+1][0]:
             count+=1
+
+    for item in all_lines:
+        trans = item[-1]
+        #trans = trans.replace('> [>]','!')
+        #trans = trans.replace('> [<]','@')
+        count = 0
+        print(trans)
+        while count < len(trans):
+            if trans[count] == '<' and count != 0 and trans[count+1] != ']': 
+                trans = trans[:count]+trans[count+1:]
+                pos = trans.rfind(' ',0,count)
+                print('pos < ', pos)
+                if pos == -1:
+                    pos = 0
+                if pos != 0:
+                    trans = trans[:pos+1]+'<'+trans[pos+1:]
+                else:
+                    trans = trans[:pos]+'<'+trans[pos:]
+            elif trans[count] == '!':
+                trans = trans[:count]+trans[count+1:]
+                pos = trans.find(' ',count,len(trans))
+                if pos == -1:
+                    pos = len(trans)
+                trans = trans[:pos]+'!'+trans[pos:]
+            elif trans[count] == '@':
+                trans = trans[:count]+trans[count+1:]
+                pos = trans.find(' ',count,len(trans))
+                if pos == -1:
+                    pos = len(trans)
+                trans = trans[:pos]+'@'+trans[pos:]
+            count+=1
+        print(trans)
+        trans = trans.replace('!','> [>] ')
+        trans = trans.replace('@','> [<] ')
+        print(trans)
+        print('\n')
+        item[-1] = trans
 
 
     # Moving overlaps out of pause markers
