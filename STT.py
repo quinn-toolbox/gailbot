@@ -323,89 +323,6 @@ def check_credentials(credentials):
             '"%s" is not a valid format for the credentials ' % credentials)
 
 
-# Function that builds CSV file using json dumps
-# Performs word by word analysis
-# Builds a combined CSV file for both speakers
-def buildCSV(json1,json2,name1,name2):
-    new_json1 = []
-    new_json2 = []
-    for item in json1:
-        if item['results'][0]['final'] == True:
-            new_json1.append(item)
-
-    for item in json2:
-        if item['results'][0]['final'] == True:
-            new_json2.append(item)
-    # Initializing
-    all_lines = []
-
-    # Creating thr json files for reference
-    with open('json0.txt', "w") as f:
-        f.write(json.dumps(new_json1, indent=4,
-                 sort_keys=True))
-    with open('json1.txt',"w") as f:
-        f.write(json.dumps(new_json2,indent = 4,
-                sort_keys = True))
-    with open('json0.txt') as speaker1_data:
-        speaker1_result = json.load(speaker1_data)
-    with open('json1.txt') as speaker2_data:
-        speaker2_result = json.load(speaker2_data)
-
-    data1 = []
-    for item in speaker1_result:
-        sub_item = item['results'][0]['alternatives'][0]['timestamps']
-        for subdata in sub_item:
-            data1.append(subdata)
-
-    data2 = []
-    for item in speaker2_result:
-        sub_item = item['results'][0]['alternatives'][0]['timestamps']
-        for subdata in sub_item:
-            data2.append(subdata)
-
-    count = 0
-    for res1,res2 in map(None,data1,data2):
-        if res1 != None and res2 != None:
-            trans1 = " "+res1[0]+" "
-            trans2 = " "+res2[0]+" "
-            start1 = res1[1]
-            start2 = res2[1]
-            end1 = res1[2]
-            end2 = res2[2]
-            if start1 < start2:
-                all_lines.append([name1,start1,end1,trans1])
-                all_lines.append([name2,start2,end2,trans2])
-            else:
-                all_lines.append([name2,start2,end2,trans2])
-                all_lines.append([name1,start1,end1,trans1])
-        elif res1 == None and res2 != None:
-
-            trans2 = " "+res2[0]+" "
-            start2 = res2[1]
-            end2 = res2[2]
-            all_lines.append([name2,start2,end2,trans2])
-
-        elif res1 != None and res2 == None:
-
-            trans1 = " "+res1[0]+" "
-            start1 = res1[1]
-            end1 = res1[2]
-            all_lines.append([name1,start1,end1,trans1])
-
-    # Sorting by start time
-    all_lines = sorted(all_lines, key= itemgetter(1))
-
-    # Removing the json files
-    try:
-        os.remove('json0.txt')
-        os.remove('json1.txt')
-    except OSError:
-        pass
-
-    return all_lines
-
-
-
 # Function that creates seperate CSV files for both speakers.
 def build_seperate_CSV(json1,json2,name1,name2):
     new_json1 = []
@@ -473,9 +390,6 @@ def build_seperate_CSV(json1,json2,name1,name2):
 
 
 
-
-
-
 # Function to write to the CSV file
 def writeCSV(all_lines,name):
 	# Writing to the CSV file
@@ -485,66 +399,6 @@ def writeCSV(all_lines,name):
     		for line in all_lines:
     			filewriter.writerow(line)
 
-# Function that does postprocessing on data in the CSV format
-def postprocessing(all_lines):
-
-    all_lines = overlap_dependancies(all_lines)
-    #all_lines = overlap_reorder(all_lines)
-    return all_lines
-
-
-# Function that adds a new list element containing
-# overlap dependancies
-def overlap_dependancies(all_lines):
-    count = 0
-    positions = []
-    while count < len(all_lines):
-        curr_name = all_lines[count][0]
-        pos = count+1
-        changed = True
-        while changed == True:
-            while all_lines[pos][0] == curr_name:
-                pos +=1
-                if pos >= len(all_lines):
-                    return all_lines
-            if all_lines[count][1] <= all_lines[pos][1] and all_lines[count][2] >= all_lines[pos][1] and all_lines[count][0] != all_lines[pos][0] and changed == True:
-                all_lines[count].append([all_lines[pos][0],all_lines[pos][1],all_lines[pos][2],all_lines[pos][-1]])
-                positions.append(pos)
-                pos+=1
-            else:
-                changed = False
-        count+=1
-
-# Function that swaps same speaker 
-# utterances if the time difference
-# between them is less than a certain threshold.
-def overlap_reorder(all_lines):
-    threshold = 0.1
-    count = 0
-    new_lines = []
-    insert_pos = count+1
-    while count < len(all_lines):
-        new_lines.append(all_lines[count])
-        #print('adding')
-        curr_name = all_lines[count][0]
-        curr_end = all_lines[count][2]
-        pos = count + 1
-        while True:
-            while all_lines[pos][0] != curr_name:
-                pos +=1
-                #rint(pos)
-                if pos >= len(all_lines):
-                    return new_lines
-            diff = all_lines[pos][1] - curr_end
-            if diff <= threshold:
-                new_lines.append(all_lines[pos])
-                #print('adding in threshold')
-                del all_lines[pos]
-            else:
-                break
-        count+=1
-
-    return new_lines
 
 # Function that does pos-processing on the seperate 
 # speaker CSV files.
@@ -601,6 +455,21 @@ def create_utterances(all_lines,threshold):
 # Function that combines and does postprocessing on
 # the two seperately created CSV files
 def combined_postprocessing(data1,data2):
+
+    all_lines = combined_concat(data1,data2)
+    all_lines = extra_spaces(all_lines)
+    all_lines = overlaps(all_lines)
+    all_lines = pauses(all_lines)
+    all_lines = combined_same_concat(all_lines)
+    all_lines = eol_delim(all_lines)
+    all_lines = rem_pause_ID(all_lines)
+    all_lines = comment_hesitation(all_lines)
+    all_lines = gaps(all_lines)
+    all_lines = extra_spaces(all_lines)
+    all_lines = extra_spaces(all_lines)
+
+    return all_lines
+
     all_lines = combined_concat(data1,data2)
     all_lines = pauses(all_lines)
     all_lines = extra_spaces(all_lines)
@@ -627,10 +496,27 @@ def gaps(all_lines):
         curr_name = curr_item[0]
         prev_name = prev_item[0]
         curr_trans = curr_item[-1]
+        if count > 1:
+            second_last_end = all_lines[count-2][2]
+        else:
+            second_last_end = curr_start
+        if second_last_end == None:
+            second_last_end = curr_start
+        if count < 0:
+            prev_end = curr_start
         if prev_end == None:
             prev_end = curr_start
+        #print('cuur_start ',curr_start)
+        #print('second last end ', second_last_end)
+        #print('prev_end ', prev_end)
+        if second_last_end > prev_end:
+            #print('changing')
+            prev_end = second_last_end
+            #print('prev_end changed ', prev_end)
         diff = curr_start - prev_end
         diff = round(diff,1)
+        #print('diff ', diff)
+        #print('\n')
         if curr_name != prev_name and curr_name != '*PPP':
             # Normal gap
             if diff > 0.3:
@@ -669,7 +555,7 @@ def comment_hesitation(all_lines):
 # is modified
 def overlaps(all_lines):
     count = 0
-    limit = 2
+    limit = 1
     while count <  len(all_lines)-1:
         all_lines[count][-1] = all_lines[count][-1].lstrip()
         all_lines[count+1][-1] = all_lines[count+1][-1].lstrip()
@@ -682,6 +568,8 @@ def overlaps(all_lines):
                 end_boundry_time  = all_lines[count][2] - all_lines[count+1][2]
                 #print(start_boundary_time,end_boundry_time)
                 #print('\n')
+
+
 
                 # Case 1:
                 # sbt is positive means overlap starts at position x from start of 
@@ -707,17 +595,15 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time))/(all_lines[count][2]-all_lines[count][1])*100)
                         y = (y/100)*len(all_lines[count][-1])
                         y = int(round(y))
-                        if y <= x:
-                            y = x+1
+                        utt_1_overlap_end = y
                         # Adding the overlap character limit
-                        if y-x <= limit:
+                        if utt_1_overlap_end - utt_1_overlap_start <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_1_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
                         all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
 
@@ -729,23 +615,21 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time)/(all_lines[count+1][2]-all_lines[count+1][1]))*100)
                         y = (y/100)*len(all_lines[count+1][-1])
                         y = int(round(y))
-                        if y == 0:
-                            y = 1
+                        utt_2_overlap_end = y 
                         # Adding the overlap character limit
-                        if len(all_lines[count][-1])-x <= limit:
+                        if len(all_lines[count][-1])-utt_1_overlap_start <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
-                        if y - 0 <= limit:
+                        if utt_2_overlap_end - 0 <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_2_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1]+'> [>] '
                         all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
                         #print(y)
@@ -781,22 +665,20 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time)/(all_lines[count][2]-all_lines[count][1]))*100)
                         y = (y/100)*len(all_lines[count][-1])
                         y = int(round(y))
-                        if y == 0:
-                            y = 1
-                        if y - 0 <= limit:
+                        utt_1_overlap_end = y
+                        if utt_1_overlap_end - 0 <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
-                        if len(all_lines[count+1][-1])-x <= limit:
+                        if len(all_lines[count+1][-1])-utt_2_overlap_start <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_1_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
                         all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
 
@@ -809,16 +691,14 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time)/(all_lines[count+1][2]-all_lines[count+1][1]))*100)
                         y = (y/100)*len(all_lines[count+1][-1])
                         y = int(round(y))
-                        if y <= x:
-                            y = x+1
-                        if y-x <= limit:
+                        utt_2_overlap_end = y
+                        if utt_2_overlap_end- utt_2_overlap_start <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_2_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1]+'> [>] '
                         all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
 
@@ -847,16 +727,14 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time)/(all_lines[count][2]-all_lines[count][1]))*100)
                         y = (y/100)*len(all_lines[count][-1])
                         y = int(round(y))
-                        if y == 0:
-                            y = 1
-                        if y - 0 <= limit:
+                        utt_1_overlap_end = y
+                        if utt_1_overlap_start - 0 <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_1_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1][:utt_1_overlap_end]+'> [>] '+all_lines[count][-1][utt_1_overlap_end:]
                         all_lines[count+1][-1] = all_lines[count+1][-1]+'> [<] '
 
@@ -868,16 +746,14 @@ def overlaps(all_lines):
                         y = 100-((abs(end_boundry_time)/(all_lines[count+1][2]-all_lines[count+1][1]))*100)
                         y = (y/100)*len(all_lines[count+1][-1])
                         y = int(round(y))
-                        if y == 0:
-                            y = 1
-                        if y - 0 <= limit:
+                        utt_2_overlap_end = y
+                        if utt_2_overlap_end - 0 <= limit:
                             print('removing marker')
                             all_lines[count][-1] = orig1
                             all_lines[count+1][-1] = orig2
                             count+=1
                             continue
                         #print('y: ',y)
-                        utt_2_overlap_end = y
                         all_lines[count][-1] = all_lines[count][-1]+'> [>] '
                         all_lines[count+1][-1] = all_lines[count+1][-1][:utt_2_overlap_end]+'> [<] '+all_lines[count+1][-1][utt_2_overlap_end:]
 
@@ -886,13 +762,16 @@ def overlaps(all_lines):
                     elif end_boundry_time == 0:
                         #print('end == 0')
                         all_lines[count][-1] = all_lines[count][-1] + '> [>] '
-                        all_lines[count+1][-1] = all_lines[count+1][-1] +'> [<] '
+                        all_lines[count+1][-1] = all_lines[count+1][-1] +'> [<] ' 
                 count+=1
             else:
                 count+=1
 
         elif all_lines[count+1][0] == '*PPP':
             count+=2
+        elif all_lines[count][0] == all_lines[count+1][0]:
+            count+=1
+
 
     # Moving overlaps out of pause markers
     for item in all_lines:
@@ -908,7 +787,7 @@ def overlaps(all_lines):
                         pause_marker += trans[count]
                     else:
                         overlap_marker += trans[count]
-                        print(overlap_marker)
+                        #print(overlap_marker)
                     count+=1
                 #print(pause_marker)
                 new_trans += overlap_marker
@@ -923,17 +802,103 @@ def overlaps(all_lines):
         #print('\n')
         item[-1] = new_trans
 
-    # Remove overlap space padding.
 
 
+    # Moving overlap marker behind pause if it exists
+    for item in all_lines:
+        trans = item[-1]
+        new_trans = ''
+        count = 0
+        marker = False
+        while count < len(trans):
+            if trans[count] == '<' and trans[count+1] != ']':
+                new_trans += trans[count]
+                marker = True
+                count+=1
+            elif marker == True and trans[count] == '(':
+                pos = count
+                pause = ''
+                while trans[count] != ')':
+                    pause += trans[count]
+                    count+=1
+                    if count >= len(trans):
+                        break
+                pause += ')'
+                count+=1
+                if count >= len(trans):
+                    break
+                extra = ''
+                while trans[count] != '>':
+                    extra+= trans[count]
+                    count+=1
+                    if count >= len(trans):
+                        break
+                overlap = ''
+                if count >= len(trans):
+                    break
+                while trans[count] != ']':
+                    overlap += trans[count]
+                    count+=1
+                    if count >= len(trans):
+                        break
+                overlap += ']'
+                overlap+= ' '
+                count+=2
 
-    # Move overlaps to behind pause markers.
+
+                new_trans += overlap
+                new_trans += pause
+                new_trans += extra
+                marker = False
+            elif marker== True and trans[count] == '>':
+                new_trans += trans[count]
+                marker = False
+                count+=1
+            else:
+                new_trans += trans[count]
+                count+=1
+        item[-1] = new_trans
+
+    # Removing space padding from around the overlap markers
+    for item in all_lines:
+        trans = item[-1]
+        count = 0
+        new_trans = ''
+        while count < len(trans):
+            if trans[count] == '<' and trans[count+1] != ']':
+                #new_trans += trans[count]
+                count+=1
+                overlapped = ''
+                while trans[count] != '>':
+                    overlapped += trans[count]
+                    count+=1
+                    if count >= len(trans):
+                        break
+                left_spaces = len(overlapped) - len(overlapped.lstrip(' '))
+                for i in range(left_spaces):
+                    new_trans += ' '
+                new_trans += '<'
+                overlapped = overlapped.lstrip()
+                overlapped = overlapped.rstrip()
+                new_trans += overlapped
+                new_trans += '>'
+                count+=1
+            else:
+                new_trans += trans[count]
+                count+=1
+        item[-1] = new_trans
 
 
-
-    # Verify each overlap marker symbol.
 
     return all_lines
+
+
+
+
+
+
+
+
 
 # Function that concatenates utterances 
 # from two different speakers as part of the 
@@ -950,6 +915,8 @@ def combined_concat(data1,data2):
             end2 = res2[2]
             name1 = res1[0]
             name2 = res2[0]
+            trans1 = ' '+trans1
+            trans2 = ' '+trans2
             #print(start1,start2)
             #print('\n')
             if start1 < start2:
@@ -982,7 +949,10 @@ def combined_same_concat(all_lines):
     while count < len(all_lines)-1:
         if all_lines[count][0] == all_lines[count+1][0]:
             new_trans = all_lines[count][-1]+all_lines[count+1][-1]
-            all_lines[count][-1] = new_trans
+            if all_lines[count][-1][0] != ' ':
+                all_lines[count][-1] = new_trans
+            else:
+                all_lines[count][-1] = new_trans
             all_lines[count][2] = all_lines[count+1][2]
             del all_lines[count+1]
         else:
@@ -994,6 +964,7 @@ def pauses(all_lines):
     all_lines = sorted(all_lines, key = itemgetter(1))
     count = 0
     while count < len(all_lines):
+        special = False
         curr_item = all_lines[count]
         prev_item = all_lines[count-1]
         curr_start = curr_item[1]
@@ -1001,13 +972,30 @@ def pauses(all_lines):
         prev_trans = prev_item[-1]
         curr_name = curr_item[0]
         prev_name = prev_item[0]
+        if count > 1:
+            second_last_end = all_lines[count-2][2]
+        else:
+            second_last_end = curr_start
+        if second_last_end == None:
+            second_last_end = curr_start
+        if count < 0:
+            prev_end = curr_start
         if prev_end == None:
             prev_end = curr_start
+        #print('cuur_start ',curr_start)
+        #print('second last end ', second_last_end)
+        #print('prev_end ', prev_end)
+        if second_last_end > prev_end:
+            #print('changing')
+            special = True
+            #print('prev_end changed ', prev_end)
         diff = curr_start - prev_end
         diff = round(diff,1)
+        #print('diff ', diff)
+        #print('\n')
         if curr_name == prev_name:
             # Normal pause
-            if diff > 0.2 and diff < 2.5:
+            if (diff > 0.2 and diff < 2.5) or special == True:
                 prev_trans += ' ('+str(diff)+') '
                 all_lines[count-1][-1] = prev_trans
             # Micropauses
@@ -1303,23 +1291,6 @@ if __name__ == '__main__':
     audio = args.combined_audio[0]
     audio = audio[2:audio.find('.wav')]
     build_CHAT(combined_output,args.Names[0],args.Names[1],audio)
-
-
-
-
-
-
-    # Building and writing a combined CSV file
-    formatted_output = buildCSV(json1 = JSON1,json2 = JSON2,name1 = speaker_names[0],name2 = speaker_names[1])
-    if len(formatted_output) > 0:
-        formatted_output = postprocessing(formatted_output)
-    writeCSV(formatted_output,'combined.csv')
-    '''
-    # Processing the audio name
-    audio = args.combined_audio[0]
-    audio = audio[2:audio.find('.wav')]
-    build_CHAT(formatted_output,args.Names[0],args.Names[1],audio)
-    '''
 
 
     # Creating and indenting the CA files.
