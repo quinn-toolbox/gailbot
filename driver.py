@@ -19,7 +19,8 @@ from operator import itemgetter
 
 
 # Constant for the audio file length
-CHUNK_SPLIT_MS = 60000
+CHUNK_SPLIT_MS = 600000
+CHUNK_SPLIT_BYTES = 800000000
 
 # Function that verifies that the given file exists.
 def file_exists(filename):
@@ -30,7 +31,7 @@ def file_exists(filename):
 
 # Function that verifies user input based on the option
 def verify_input(option,files,names):
-	if option == '2':
+	if option == '2' or option == '1':
 		if len(files) != 2:
 			print('Error: Two MXF files expected')
 			return False
@@ -41,7 +42,7 @@ def verify_input(option,files,names):
 			print("Error: Two names expected")
 			return False
 		return True
-	elif option == '1' or option == '4':
+	elif option == '4':
 		if len(files) != 1:
 			print("Error: One MXF file expected")
 			return False
@@ -82,7 +83,7 @@ def verify_input(option,files,names):
 def get_type_input():
 	print('\n')
 	print('Welcome to Gailbot 2.0!\n')
-	print('Press 1 to transcribe a single MXF file, with a separate channel for each speaker')
+	print('Press 1 to transcribe one or two MXF files, with a separate channel for each speaker')
 	print('Press 2 to transcribe two MXF files part of the same conversation, getting audio from each file separately')
 	print('Press 3 to transcribe two wav files corresponding to different speakers in one conversation')
 	print('Press 4 to transcribe a single MXF file with a single channel with using dialogue model')
@@ -494,7 +495,8 @@ if __name__ == '__main__':
 	num_chunks = []
 	print('Analyzing file size. Please wait...')
 	for file in args.in_files:
-		if len(AudioSegment.from_file(file)) > CHUNK_SPLIT_MS:
+		#if len(AudioSegment.from_file(file)) > CHUNK_SPLIT_MS:
+		if os.path.getsize(file) > CHUNK_SPLIT_BYTES:
 			print('\nFile-size exceeds limit. Chunking audio...')
 			chunk = True
 			total_chunks = chunk_audio(file,count)
@@ -572,6 +574,7 @@ if __name__ == '__main__':
 		if os.path.exists('1.json.txt'):
 			os.remove('1.json.txt')	
 		new_name = overlay(args.in_files[0],args.in_files[1])
+		new_name = new_name[:new_name.rfind('.')]
 		send_call(args.credentials,args.in_files,args.Names,trans_type,len(args.in_files),new_name)
 
 		# Building the individual speaker CSV files.
