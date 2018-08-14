@@ -58,6 +58,7 @@ import csv
 from operator import itemgetter
 import io
 from custom_model import custom_model           # Required for custom model-user interface.
+from acoustic_model import custom_model_acoustic 		# Required for acoustic custom model interface.
 from subprocess import call
 import time
 
@@ -400,6 +401,13 @@ if __name__ == '__main__':
     model_info = custom_model(username = args.credentials[0],password = args.credentials[1])
     if model_info != None:
         args.lm_custom_id = model_info
+    ###
+
+    ###
+    # Running the acoustic custom model interface script
+    acoustic_info = custom_model_acoustic(username = args.credentials[0],password = args.credentials[1])
+    if acoustic_info != None:
+    	args.am_custom_id = acoustic_info
     ###
 
     # Adding audio files to analysis queue.

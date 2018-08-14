@@ -592,7 +592,7 @@ def pauses(all_lines):
         prev_item = all_lines[count-1]
         curr_start = curr_item[1]
         prev_end = prev_item[2]
-        prev_trans = prev_item[-1]
+        prev_trans = unicode(prev_item[-1])
         curr_name = curr_item[0]
         prev_name = prev_item[0]
         if count > 1:
@@ -642,10 +642,10 @@ def rem_pause_ID(all_lines):
         prev_item = all_lines[count-1]
         curr_start = curr_item[1]
         prev_end = prev_item[2]
-        prev_trans = prev_item[-1]
+        prev_trans = unicode(prev_item[-1])
         curr_name = curr_item[0]
         prev_name = prev_item[0]
-        curr_trans = curr_item[-1]
+        curr_trans = unicode(curr_item[-1])
         if prev_end == None:
             prev_end = curr_start
         if curr_name == '*PPP':

@@ -19,7 +19,7 @@ from operator import itemgetter
 
 
 # Constant for the audio file length
-CHUNK_SPLIT_MS = 600000
+CHUNK_SPLIT_MS = 60000
 
 # Function that verifies that the given file exists.
 def file_exists(filename):
@@ -99,7 +99,7 @@ def get_type_input():
 # smaller parts
 def chunk_audio(filename,count):
 	myaudio = AudioSegment.from_file(filename,'wav')
-	print(filename)
+	print('\n')
 	chunk_length_ms = CHUNK_SPLIT_MS
 	# Making 8 minute audio chunks.
 	total = 0
@@ -108,10 +108,10 @@ def chunk_audio(filename,count):
 	for i, chunk in enumerate(chunks):
 	    chunk_name = "-chunk{0}.wav".format(i)
 	    chunk_name = curr_name + chunk_name
-	    print(chunk_name)
 	    print "exporting", chunk_name
 	    chunk.export(chunk_name, format="wav")
 	    total+=1
+	print('\n')
 	return total
 
 
@@ -124,10 +124,9 @@ def send_call(credentials,filenames,speaker_names, option,num_files,new_name):
 					" -files "+file1+" "+file2+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+new_name
 		os.system(command)
 	elif option == '3' and num_files == 2:
-		print('option 3')
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+filenames[0]+" "+filenames[1]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+new_name
-		print(command)
+
 		os.system(command)
 	elif option == '4' and num_files == 1:
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
@@ -202,7 +201,6 @@ def overlay(file1,file2):
 
 		command = "ffmpeg -i "+audio1+" -i "+audio2+ " -filter_complex amix=inputs=2:duration=longest:dropout_transition=3 "+new_name
 		os.system(command)
-		print(new_name)
 		return new_name
 
 
@@ -447,7 +445,7 @@ if __name__ == '__main__':
 	trans_type = get_type_input()
 	input_check = verify_input(trans_type,args.in_files,args.Names)
 	if input_check == False:
-		print("Exiting...")
+		print("Exiting... ")
 		sys.exit(-1)
 	check = verify_files(args.in_files)
 	if check == False:
@@ -494,11 +492,12 @@ if __name__ == '__main__':
 	chunk = False
 	count = 0
 	num_chunks = []
+	print('Analyzing file size. Please wait...')
 	for file in args.in_files:
 		if len(AudioSegment.from_file(file)) > CHUNK_SPLIT_MS:
+			print('\nFile-size exceeds limit. Chunking audio...')
 			chunk = True
 			total_chunks = chunk_audio(file,count)
-			print(total_chunks)
 			num_chunks.append(total_chunks)
 		count+=1
 
@@ -546,20 +545,16 @@ if __name__ == '__main__':
 
 
 		elif len(args.in_files) == 1:
-			print('THIS CASE')
 			orig1 = args.in_files[0]
 			for i in range(num_chunks[0]):
 				file1name = ''
 				file1name = "-chunk{0}.wav".format(i)
-				print(file1name)
 				file1name = orig1[:orig1.rfind('.')]+file1name
 				args.in_files = []
 				args.in_files = [file1name] 
 				if os.path.exists('0.json.txt'):
 					os.remove('0.json.txt')
-				print(args.in_files[0])
 				send_call(args.credentials,args.in_files,args.Names,trans_type,1,'')
-				print('HERE')
 				#** Write a function here to build a separate CSV file with speaker labels.
 				with open('0.json.txt') as speaker1_data:
 					speaker1_result  = json.load(speaker1_data)
