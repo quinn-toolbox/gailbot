@@ -28,7 +28,7 @@ Install the CLAN editor:
 Follow these instructions after acquiring the aforementioned pre-requisites:
 * Download or clone the repository, open the directory with a terminal.
 * Use the following command to run gailbot:
-           * python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
+* python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
 * Follow Gailbot's prompts to generate a transcript.
 
 **NOTE:** Always copy and paste the custom model ID without punctuation marks when/if propmted by Gailbot.
