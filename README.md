@@ -33,7 +33,8 @@ Follow these instructions after acquiring the aforementioned pre-requisites:
 
 **NOTE:** The Bluemix username and password is required to establish a connection with Watson's Speech to Text service. The user needs to log into the Bluemix account to see their respective credentials for the Speech to Text service: https://idaas.iam.ibm.com/idaas/mtfim/sps/authsvc?PolicyId=urn:ibm:security:authentication:asf:basicldapuser
 
-**NOTE: Watson's Speech to Text service has certain transcription costs that, in no way, are assoiated with the Tufts Humann Interaction Lab**. 
+**NOTE: Watson's Speech to Text service has certain transcription costs that, in no way, are assoiated with the Tufts Human Interaction Lab**. 
+
 For more details: https://www.ibm.com/cloud/watson-speech-to-text/pricing
 
 **NOTE:** Always copy and paste the custom model ID without punctuation marks when/if propmted by Gailbot.
