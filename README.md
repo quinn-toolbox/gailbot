@@ -39,7 +39,7 @@ As of yet, Gailbot only accepts '.wav' audio files and '.MXF' video files.
 **Usage Constraints**
 * Gailbot requires periodic monitoring of the command line output for responses to Gailbot's prompts/ any input that might be required.
 
-**NOTE: We do not, in any way, guarantee the accuracy of the trasnscripts generated from Gailbot. It is meant to generate prelimenary transcripts that can them be improved through manual input.**
+**NOTE: We do not, in any way, guarantee the accuracy of the trasnscripts generated from Gailbot. It is meant to generate prelimenary transcripts that can then be improved through manual input.**
 
 ##  Custom and Acoustic Language Models:
 Gailbot's Custom language model is meant to expand on Watson's existing word dictionary to transcribe specialized contexts. 
