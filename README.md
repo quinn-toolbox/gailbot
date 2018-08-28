@@ -42,7 +42,8 @@ Run the following command on the command line to install Gailbot's pre-requisite
 
 ## Usage
 
-* Use the following command to run gailbot:
+Use the following command to run gailbot:
+
 * python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
 * Follow Gailbot's prompts to generate a transcript.
 
