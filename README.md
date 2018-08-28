@@ -4,7 +4,7 @@ GAILBOT will (G)enerate (A)n (I)nitiaL (B)allpark (O)rthographic (T)ranscript
 
 ## About Gailbot
 
-Gailbot is named after [Gail Jefferson](https://en.wikipedia.org/wiki/Gail_Jefferson), inventor of the transcription system used in [Conversation Analysis](https://en.wikipedia.org/wiki/Conversation_analysis) transcription system. She can make a first pass at generating a transcript that can then be improved manually.
+Gailbot is named after [Gail Jefferson](https://en.wikipedia.org/wiki/Gail_Jefferson), inventor of the transcription system used for [Conversation Analysis](https://en.wikipedia.org/wiki/Conversation_analysis). She can generate a first pass at a transcript that can then be improved manually.
 
 ## How Gailbot works
 
