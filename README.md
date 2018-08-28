@@ -1,51 +1,54 @@
 # Gailbot
-GAILBOT will Generate An InitiaL Ballpark Orthographic Transcript
 
-Gailbot is designed to be a rough automated speech to text system that can make a first pass at generating Conversation Analystics (CA)
-transcripts. It utlizes IBM's Watson Speech to Text API to generate a CHAT file in the CLAN editor, developed as part of Brian McWhinney's
-(Carnigie Mellon University) Talk-Bank project. It further utilizes the Tufts Human Interaction Lab's Jeffersonize tool (https://github.com/HiLabTufts/jeffersonize) to generate a CAlite
-representation of the transcript.
+GAILBOT will (G)enerate (A)n (I)nitiaL (B)allpark (O)rthographic (T)ranscript
+
+## About Gailbot
+
+Gailbot is named after [Gail Jefferson](https://en.wikipedia.org/wiki/Gail_Jefferson), inventor of the transcription system used in [Conversation Analysis](https://en.wikipedia.org/wiki/Conversation_analysis) transcription system. She can make a first pass at generating a transcript that can then be improved manually.
+
+## How Gailbot works
+
+Gailbot takea a recorded dialogue and uses [Watson's Speech-To-Text system](https://www.ibm.com/watson/services/speech-to-text/) to generate a transcript in the [CHAT transcription format](https://talkbank.org/manuals/CHAT.html). It then uses the [Jeffersonize](https://github.com/HiLabTufts/jeffersonize) tool to create a CA-like transcript that includes structural details of the talk such as intra-turn pauses, inter-turn gaps, and overlaps. 
 
 ## Status
 Gailbot has been tested on MAC OSX.
 The current version is an early alpha, feel free to provide feedback at: hilab-dev@elist.tufts.edu
 
-## Build
-Run the following command on the command line to install Gailbot's pre-requisite libraries:
-* pip install –upgrade Watson-developer-cloud
-* pip install pydub
+## Before using gailbot
 
-Install the ffmpeg tool:
+In order to use Gailbot, you should have some familiarity with using the terminal to install and run software. You should also be aware that after a certain amount of free time, IBM's Watson will begin to charge for automated transcription.
+
+## Installation
+
+1. Install the ffmpeg tool:
 * Download the tool from: ttps://www.ffmpeg.org/download.html
 * Intall the tar file on the webpage using the instructions.
 * Version required: 4.0.1 or later for Mac OSX.
 
-Install the CLAN editor:
+2. Install the CLAN editor:
 * https://talkbank.org/software/
+
+3. Build
+Run the following command on the command line to install Gailbot's pre-requisite libraries:
+* pip install –upgrade Watson-developer-cloud
+* pip install pydub
 
 ## Usage
 
-Follow these instructions after acquiring the aforementioned pre-requisites:
-* Download or clone the repository, open the directory with a terminal.
+Follow these instructions after acquiring the installation process:
+* Download or clone the repository, then open the directory with a terminal.
 * Use the following command to run gailbot:
 * python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
 * Follow Gailbot's prompts to generate a transcript.
 
 **NOTE:** The Bluemix username and password is required to establish a connection with Watson's Speech to Text service. The user needs to log into the Bluemix account to see their respective credentials for the Speech to Text service: https://idaas.iam.ibm.com/idaas/mtfim/sps/authsvc?PolicyId=urn:ibm:security:authentication:asf:basicldapuser
 
-**NOTE: Watson's Speech to Text service has certain transcription costs that, in no way, are assoiated with the Tufts Human Interaction Lab**. 
-
-For more details: https://www.ibm.com/cloud/watson-speech-to-text/pricing
+For transcription pricing details see https://www.ibm.com/cloud/watson-speech-to-text/pricing
 
 **NOTE:** Always copy and paste the custom model ID without punctuation marks when/if propmted by Gailbot.
 
 **File Constraints**
-As of yet, Gailbot only accepts '.wav' audio files and '.MXF' video files.
-
-**Usage Constraints**
-* Gailbot requires periodic monitoring of the command line output for responses to Gailbot's prompts/ any input that might be required.
-
-**NOTE: We do not, in any way, guarantee the accuracy of the trasnscripts generated from Gailbot. It is meant to generate prelimenary transcripts that can then be improved through manual input.**
+Gailbot currently accepts '.wav' audio files and '.MXF' video files.
 
 ##  Custom and Acoustic Language Models:
 Gailbot's Custom language model is meant to expand on Watson's existing word dictionary to transcribe specialized contexts. 
