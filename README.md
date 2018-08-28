@@ -28,24 +28,27 @@ In order to use Gailbot, you should have some familiarity with using the termina
 2. Install the CLAN editor:
 * https://talkbank.org/software/
 
-3. Build
+3. Build prerequisites
 Run the following command on the command line to install Gailbot's pre-requisite libraries:
 * pip install –upgrade Watson-developer-cloud
 * pip install pydub
 
+4. Create an account with IBM so you can use Watson's speech-to-text service:
+* You can sign up for a trial account here: console.bluemix.net/catalog/services/speech-to-text
+* **Note**: Your IBM Bluemix username and password is required to establish a connection with Watson's Speech to Text service. For transcription pricing details see https://www.ibm.com/cloud/watson-speech-to-text/pricing
+
+4. Download gailbot 
+* Download or clone gailbot, then open a terminal and navigate to your gailbot directory.
+
 ## Usage
 
-Follow these instructions after acquiring the installation process:
-* Download or clone the repository, then open the directory with a terminal.
 * Use the following command to run gailbot:
 * python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
 * Follow Gailbot's prompts to generate a transcript.
 
-**NOTE:** The Bluemix username and password is required to establish a connection with Watson's Speech to Text service. The user needs to log into the Bluemix account to see their respective credentials for the Speech to Text service: https://idaas.iam.ibm.com/idaas/mtfim/sps/authsvc?PolicyId=urn:ibm:security:authentication:asf:basicldapuser
-
-For transcription pricing details see https://www.ibm.com/cloud/watson-speech-to-text/pricing
-
 **NOTE:** Always copy and paste the custom model ID without punctuation marks when/if propmted by Gailbot.
+
+## Options
 
 **File Constraints**
 Gailbot currently accepts '.wav' audio files and '.MXF' video files.
