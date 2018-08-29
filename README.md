@@ -20,8 +20,10 @@ In order to use Gailbot, you should have some familiarity with using the termina
 
 ## Installation
 
-1. Install the ffmpeg tool:
-* Download the tool from: ttps://www.ffmpeg.org/download.html
+1. Install ffmpeg:
+a) Using the [homebrew](https://brew.sh) packaging system
+b) Using the binary from the ffmpeg site
+* Download the tool from: https://www.ffmpeg.org/download.html
 * Intall the tar file on the webpage using the instructions.
 * Version required: 4.0.1 or later for Mac OSX.
 
