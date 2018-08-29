@@ -44,7 +44,8 @@ Then install the following libraries:
 
 4. Create an account with IBM so you can use Watson's speech-to-text service:
 * You can sign up for a trial account here: console.bluemix.net/catalog/services/speech-to-text
-* **Note**: Your IBM Bluemix username and password is required to establish a connection with Watson's Speech to Text service. For transcription pricing details see https://www.ibm.com/cloud/watson-speech-to-text/pricing
+* **Note**: Your IBM Bluemix username and password is required to establish a connection with Watson's Speech to Text service. Once you have registered you can find your credentials here: https://console.us-east.bluemix.net/developer/watson/existing-services
+* For transcription pricing details see https://www.ibm.com/cloud/watson-speech-to-text/pricing
 
 4. Download gailbot 
 * Download or clone gailbot, then open a terminal and navigate to your gailbot directory.
