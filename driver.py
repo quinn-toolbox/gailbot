@@ -18,9 +18,9 @@ import post_processing
 from operator import itemgetter
 
 
-# Constant for the audio file length
+# Constants for the audio file length
 CHUNK_SPLIT_MS = 600000
-CHUNK_SPLIT_BYTES = 800000000
+CHUNK_SPLIT_BYTES = 80000000
 
 # Function that verifies that the given file exists.
 def file_exists(filename):
@@ -75,6 +75,28 @@ def verify_input(option,files,names):
 			print("Error: Two names expected")
 			return False
 		return True
+	elif option == '6':
+		if len(files) != 1:
+			print("Error: One mp4,mov,mv4, or avi file expected")
+			return False
+		if check_extension(files[0],'mp4') == False and check_extension(files[0],'MOV') == False and check_extension(files[0],'mv4') == False and check_extension(files[0],'avi') == False:
+			print("Error: Verify mp4,mov,mv4, or avi extension")
+			return False
+		if len(names) != 2:
+			print("Error: Two names expected")
+			return False
+		return True
+	elif option == '7':
+		if len(files) != 2:
+			print("Error: Two mp4,mov,mv4, or avi files expected")
+			return False
+		if check_extension(files[0],'wav') == True or check_extension(files[1],'wav')== True:
+			print("Error: Verify mp4,mov,mv4, or avi extension")
+			return False
+		if len(names) != 2:
+			print("Error: Two names expected")
+			return False
+		return True
 
 
 
@@ -88,12 +110,18 @@ def get_type_input():
 	print('Press 3 to transcribe two wav files corresponding to different speakers in one conversation')
 	print('Press 4 to transcribe a single MXF file with a single channel with using dialogue model')
 	print('Press 5 to transcribe a single wav using the dialogue model')
+	print('Press 6 to transcribe a single mp4,mov,mv4, or avi file using the dialogue model')
+	print('Press 7 to transcribe two mp4,mov,mv4, or avi files corresponding to the same conversation')
 	while True:
-		option = raw_input('Please enter your  option\n')
-		if option < 0 and option > 5:
-			print('Incorrect option. Please try again')
-		else:
-			break
+		try:
+			option = raw_input('Please enter your  option\n')
+			if int(option) < 0 and int(option) > 5:
+				print('Incorrect option. Please try again')
+			else:
+				break
+		except ValueError:
+			print('Incorrect input\n Exiting...')
+			sys.exit(-1)
 	return option
 
 # Function that spilts the audio file into multiple
@@ -124,7 +152,7 @@ def send_call(credentials,filenames,speaker_names, option,num_files,new_name):
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+file1+" "+file2+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+new_name
 		os.system(command)
-	elif option == '3' and num_files == 2:
+	elif (option == '3' or option == '7') and num_files == 2:
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+filenames[0]+" "+filenames[1]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+new_name
 
@@ -133,10 +161,13 @@ def send_call(credentials,filenames,speaker_names, option,num_files,new_name):
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+filenames[0]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+filenames[0]
 		os.system(command)
-	elif option == '5' and num_files == 1:
+	elif (option == '5' or option == '6') and num_files == 1:
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+filenames[0]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+filenames[0]
 		os.system(command)
+	else:
+		print('Incorrect Option\nExiting...')
+		sys.exit(-1)
 
 
 
@@ -331,28 +362,38 @@ def build_seperate_CSV(json1,json2,name1,name2):
     all_lines2 = []
 
     data1 = []
+    conf_data1 = []
     for item in speaker1_result:
         sub_item = item['results'][0]['alternatives'][0]['timestamps']
+        confdata = item['results'][0]['alternatives'][0]['word_confidence']
         for subdata in sub_item:
             data1.append(subdata)
+        for conf in confdata:
+        	conf_data1.append(conf)
 
     data2 = []
+    conf_data2 = []
     for item in speaker2_result:
         sub_item = item['results'][0]['alternatives'][0]['timestamps']
+        confdata = item['results'][0]['alternatives'][0]['word_confidence']
         for subdata in sub_item:
             data2.append(subdata)
+        for conf in confdata:
+        	conf_data2.append(conf)
 
-    for res1 in data1:
+    for res1,conf1 in map(None,data1,conf_data1):
         trans1 = " "+res1[0]+" "
         start1 = res1[1]
         end1 = res1[2]
-        all_lines1.append([name1,start1,end1,trans1])
+        conf = conf1[1]
+        all_lines1.append([name1,start1,end1,trans1,conf])
 
-    for res2 in data2:
+    for res2,conf2 in map(None,data2,conf_data2):
         trans2 = " "+res2[0]+" "
         start2 = res2[1]
         end2 = res2[2]
-        all_lines2.append([name2,start2,end2,trans2])
+        conf = conf2[1]
+        all_lines2.append([name2,start2,end2,trans2,conf])
 
     # Removing the json files
     try:
@@ -425,6 +466,25 @@ def concat_csv_single(num_chunks):
 		os.remove(name1)
 	writeCSV(speaker_1_list,'separate-1.csv')
 
+
+
+# Function that takes one of the following file formats
+# and converts that to a wav file.
+def extract_convert_wav(files):
+	new_files = []
+	for file in files:
+		if check_extension(file,'wav') == True or check_extension(file,"MXF") == True:
+			return files
+		name = file[:file.rfind(".")]
+		ext = file[file.rfind(".")+1:]
+		command = "ffmpeg -i "+file+ " -acodec pcm_s16le -ar 16000 "+name+".wav"
+		os.system(command)
+		new_files.append(name+".wav")
+
+	return new_files
+
+
+
 if __name__ == '__main__':
 
 	# parse command line parameters
@@ -439,9 +499,17 @@ if __name__ == '__main__':
 	parser.add_argument(
 		'-names', action = 'store', dest = 'Names', default = None,
 		help = 'Speaker names', nargs = 2, required = True)
+	parser.add_argument(
+		'-thresholds', action = 'store_true',
+		help = 'Set to customize post-processing thresholds')
+	parser.add_argument(
+		'-headers', action = 'store_true',
+		help = 'Set to customize post-processing thresholds')
 
 	args = parser.parse_args()
 
+
+	
 
 	trans_type = get_type_input()
 	input_check = verify_input(trans_type,args.in_files,args.Names)
@@ -464,6 +532,9 @@ if __name__ == '__main__':
 
 
 	args.credentials = [args.credentials[:args.credentials.rfind(':')] ,args.credentials[args.credentials.rfind(":")+1:]]
+
+	# Changing the audio files if not in wav or mxf format
+	args.in_files = extract_convert_wav(args.in_files)
 
 	# Getting audio from MXF files
 	MXF = True
@@ -503,7 +574,7 @@ if __name__ == '__main__':
 			num_chunks.append(total_chunks)
 		count+=1
 
-	if chunk == True and trans_type != 4 and trans_type != 5:
+	if chunk == True:
 		if len(args.in_files) == 2: 
 			if num_chunks[0] != num_chunks[1]:
 				print("ERROR: Number of chunks do not match")
@@ -568,7 +639,7 @@ if __name__ == '__main__':
 			concat_csv_single(num_chunks[0])
 			args.in_files[0] = orig1
 
-	elif (trans_type == '1' or trans_type == '2' or trans_type == '3') and len(args.in_files) == 2:
+	elif (trans_type == '1' or trans_type == '2' or trans_type == '3' or trans_type == '7') and len(args.in_files) == 2:
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 		if os.path.exists('1.json.txt'):
@@ -590,7 +661,7 @@ if __name__ == '__main__':
 		if os.path.exists('1.json.txt'):
 			os.remove('1.json.txt')
 
-	elif (trans_type == '4' or trans_type == '5') and len(args.in_files) == 1:
+	elif (trans_type == '4' or trans_type == '5' or trans_type == '6') and len(args.in_files) == 1:
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 		send_call(args.credentials,args.in_files,args.Names,trans_type,len(args.in_files),'')
@@ -605,32 +676,47 @@ if __name__ == '__main__':
 			os.remove('0.json.txt')
 
 
+	# Setting thresholds for post_processing functions
+	# if the flag was set.
+	if args.thresholds:
+		cust_thresh = True
+	else:
+		cust_thresh = False
+	threshold_dict = post_processing.customize_thresholds(cust_thresh)
+
+	# Checking if the headers need to be customized
+	if args.headers:
+		cust_headers = True
+	else:
+		cust_headers = False
+
+
 	# Applying post_processing functions to the data
 	if len(args.in_files) > 1:
 		all_data = post_processing.read_data_double('separate-1.csv','separate-2.csv')
 		if len(all_data[0]) > 0 and len(all_data[1]) > 0:
-			all_data[0] = post_processing.seperate_postprocessing(all_data[0])
-			all_data[1] = post_processing.seperate_postprocessing(all_data[1])
-			os.remove('separate-1.csv')
-			os.remove('separate-2.csv')
-			writeCSV(all_data[0],'speaker-1.csv')
-			writeCSV(all_data[1],'speaker-2.csv')
+			all_data[0] = post_processing.seperate_postprocessing(all_data[0],threshold_dict)
+			all_data[1] = post_processing.seperate_postprocessing(all_data[1],threshold_dict)
+			#os.remove('separate-1.csv')
+			#os.remove('separate-2.csv')
+			writeCSV(all_data[0],'speaker-1-new.csv')
+			writeCSV(all_data[1],'speaker-2-new.csv')
 
 		# Combining and doing postprocessing on the two individual speaker files.
-		combined_output = post_processing.combined_postprocessing(all_data[0],all_data[1])
+		combined_output = post_processing.combined_postprocessing(all_data[0],all_data[1],threshold_dict)
 		writeCSV(combined_output,'combined.csv')
-		post_processing.build_CHAT(combined_output,args.Names[0],args.Names[1],new_name)
+		post_processing.build_CHAT(combined_output,args.Names[0],args.Names[1],new_name,cust_headers)
 
 	elif len(args.in_files) == 1:
 		all_data = post_processing.read_data_single('separate-1.csv')
-		all_data = post_processing.seperate_postprocessing(all_data)
-		os.remove('separate-1.csv')
-		writeCSV(all_data,'separate-1.csv')
-		combined_output = post_processing.combined_post_processing_single(all_data)
+		all_data = post_processing.seperate_postprocessing(all_data,threshold_dict)
+		#os.remove('separate-1.csv')
+		writeCSV(all_data,'separate-1-new.csv')
+		combined_output = post_processing.combined_post_processing_single(all_data,threshold_dict)
 		writeCSV(combined_output,'combined.csv')
 		new_name = args.in_files[0]
-		post_processing.build_CHAT(combined_output,'SP1','SP2',new_name[:new_name.rfind('.')])
-		os.remove('separate-1.csv')
+		post_processing.build_CHAT(combined_output,'SP1','SP2',new_name[:new_name.rfind('.')],cust_headers)
+		#os.remove('separate-1.csv')
 
 	# Creating and indenting the CA files.
 	os.system('./converter chat2calite combined.cha')
@@ -638,7 +724,10 @@ if __name__ == '__main__':
 	os.remove('combined.S.ca')
 	os.rename('combined.S.indnt.cex','combined.S.ca')
 
-
+	# Renaming the CHAT, CA, and combined-csv files.
+	os.rename('combined.cha',new_name[:new_name.rfind('.')]+'.cha')
+	os.rename('combined.S.ca',new_name[:new_name.rfind('.')]+'.S.ca')
+	os.rename('combined.csv',new_name[:new_name.rfind('.')]+'.csv')
 
 
 

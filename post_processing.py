@@ -8,6 +8,149 @@ import base64                      # necessary to encode in base64
 from subprocess import call
 import itertools
 
+
+
+# Function that assigns threshold values
+# based on the audio quality.
+# The user can also choose to manually set all 
+# thresholds.
+'''
+As of yet, the thresholds that can be changed are:
+    1. Normal pauses.
+    2. Micro pauses
+    3. Normal gaps.
+    4. Very large pauses
+    5. Latch markers
+    6. TCU break point
+Default values are initialized to global variables.
+'''
+def customize_thresholds(flag):
+    if flag == False:
+        normal_gap = 0.3
+        latch_low = 0.01
+        latch_high = 0.05
+        normal_pause_low = 0.2
+        normal_pause_high = 1.0
+        micropause_low = 0.1
+        micropause_high = 0.2
+        very_large_pause = 1.0
+        TCU_break = 0.1
+    else:
+
+        while True:
+            option = raw_input('Press 1 to specify slow speech rate\nPress 2 to specify medium speech rate\nPress 3 to specify high speech rate\nPress 4 to customize individual thresholds\nPress 5 for default values\n')
+            if option == '1':
+                normal_gap = 0.4
+                latch_low = 0.02
+                latch_high = 0.06
+                normal_pause_low = 0.3
+                normal_pause_high = 1.1
+                micropause_low = 0.2
+                micropause_high = 0.3
+                very_large_pause = 1.1
+                TCU_break = 0.11
+                break
+
+            elif option == '2':
+                normal_gap = 0.3
+                latch_low = 0.01
+                latch_high = 0.05
+                normal_pause_low = 0.2
+                normal_pause_high = 1.0
+                micropause_low = 0.1
+                micropause_high = 0.2
+                very_large_pause = 1.0
+                TCU_break = 0.1
+                break
+
+            elif option == '3':
+                normal_gap = 0.2
+                latch_low = 0
+                latch_high = 0.04
+                normal_pause_low = 0.1
+                normal_pause_high = 0.9
+                micropause_low = 0
+                micropause_high = 0.1
+                very_large_pause = 0.9
+                TCU_break = 0.09
+                break
+
+            elif option == '4':
+                print('NOTE: All threshold values should be in seconds')
+                print('Specify normal gap threshold')
+                normal_gap = get_float_int_input()
+                print('Specify lower bound for latch marker')
+                latch_low = get_float_int_input()
+                print('Specify upper bound for latch marker')
+                latch_high = get_float_int_input()
+                print('Specify lower bound for normal pause')
+                normal_pause_low = get_float_int_input()
+                print('Specify upper bound for normal pause')
+                normal_pause_high = get_float_int_input()
+                print('Specify lower bound for micro-pauses')
+                micropause_low = get_float_int_input()
+                print('Specify upper bound for micro-pauses')
+                micropause_high = get_float_int_input()
+                print('Specify threshold for very large pauses')
+                very_large_pause = get_float_int_input()
+                print('Specify TCU break-off threshold')
+                TCU_break = get_float_int_input()
+                break
+
+            elif option == '5':
+                normal_gap = 0.3
+                latch_low = 0.01
+                latch_high = 0.05
+                normal_pause_low = 0.2
+                normal_pause_high = 1.0
+                micropause_low = 0.1
+                micropause_high = 0.2
+                very_large_pause = 1.0
+                TCU_break = 0.1
+                break
+
+    thresholds = {'ng': normal_gap, 'll': latch_low, 'lh' : latch_high, 'npl' : normal_pause_low, 'nph' : normal_pause_high, 'ml' : micropause_low, 'mh' : micropause_high, 'vlp' : very_large_pause, 'break' : TCU_break}
+    return thresholds
+
+# Function that declares thresholds as global variables
+def dec_global_thresholds(thresh_dict):
+    global normal_gap
+    global latch_low
+    global latch_high
+    global normal_pause_low
+    global normal_pause_high
+    global micropause_low
+    global micropause_high
+    global very_large_pause
+    global TCU_break
+    normal_gap = thresh_dict['ng']
+    latch_low = thresh_dict['ll']
+    latch_high = thresh_dict['lh']
+    normal_pause_low = thresh_dict['npl']
+    normal_pause_high = thresh_dict['nph']
+    micropause_low = thresh_dict['ml']
+    micropause_high = thresh_dict['mh']
+    very_large_pause = thresh_dict['vlp']
+    TCU_break = thresh_dict['break']
+
+
+# Helper function that gets float or interger input only
+def get_float_int_input():
+    count = 0
+    while True:
+        number = raw_input()
+        nb = None
+        for cast in (int, float):
+            try:
+                nb = cast(number)
+                if nb != None:
+                    number = cast
+                    return nb
+            except ValueError:
+                count+=1
+                if count == 2:
+                    print('Error: Ensure integer or float input. Re-Enter input')
+
 # Function that reads data from a single csv file
 def read_data_single(file1):
 	data1 = []
@@ -49,8 +192,17 @@ def read_data_double(file1,file2):
 
 # Function that does pos-processing on the seperate 
 # speaker CSV files.
-def seperate_postprocessing(all_lines):
-    all_lines = create_utterances(all_lines,0.1)
+def seperate_postprocessing(all_lines,thresh_dict):
+    all_lines = remove_confidence(all_lines)
+    all_lines = create_utterances(all_lines,thresh_dict['break'])
+    return all_lines
+
+
+# Function that removes the confidence 
+# data for individual speakers
+def remove_confidence(all_lines):
+    for item in all_lines:
+        del item[-1]
     return all_lines
 
 
@@ -88,8 +240,8 @@ def create_utterances(all_lines,threshold):
 
 # Function that combines and does postprocessing on
 # the two seperately created CSV files
-def combined_postprocessing(data1,data2):
-
+def combined_postprocessing(data1,data2,thresh_dict):
+    dec_global_thresholds(thresh_dict)
     all_lines = combined_concat(data1,data2)
     all_lines = extra_spaces(all_lines)
     all_lines = overlaps(all_lines)
@@ -97,6 +249,9 @@ def combined_postprocessing(data1,data2):
     all_lines = add_end_spacing(all_lines)
     all_lines = combined_same_concat(all_lines)
     all_lines = eol_delim(all_lines)
+
+    #all_lines = rem_very_large_pause(all_lines)
+
     all_lines = rem_pause_ID(all_lines)
     all_lines = comment_hesitation(all_lines)
     all_lines = gaps(all_lines)
@@ -135,7 +290,7 @@ def gaps(all_lines):
         diff = round(diff,1)
         if curr_name != prev_name and curr_name != '*PPP':
             # Normal gap
-            if diff > 0.3:
+            if diff > normal_gap:
                 new_item = [' ', prev_end , curr_start , '\t('+str(diff)+') . ']
                 all_lines.insert(count,new_item)
                 pos = prev_trans.rfind('.')
@@ -145,7 +300,7 @@ def gaps(all_lines):
                 all_lines[count-1][-1] = prev_trans
                 count+=1
             # Adding the latch markers
-            elif diff > 0.01 and diff < 0.05: 
+            elif diff > latch_low and diff < latch_high: 
                 pos = prev_trans.rfind('.')
                 prev_trans = prev_trans[:pos-1]+u' '+u"^"+u' '+prev_trans[pos:]
                 all_lines[count-1][-1] = prev_trans
@@ -595,7 +750,7 @@ def pauses(all_lines):
         prev_trans = unicode(prev_item[-1])
         curr_name = curr_item[0]
         prev_name = prev_item[0]
-        if count > 1:
+        if count > 2:
             second_last_end = all_lines[count-2][2]
         else:
             second_last_end = curr_start
@@ -605,21 +760,21 @@ def pauses(all_lines):
             prev_end = curr_start
         if prev_end == None:
             prev_end = curr_start
-        if second_last_end > prev_end:
+        if second_last_end > prev_end and count > 2:
             special = True
         diff = curr_start - prev_end
         diff = round(diff,1)
         if curr_name == prev_name:
             # Normal pause
-            if (diff > 0.2 and diff < 2.5) or special == True:
+            if (diff > normal_pause_low and diff <= normal_pause_high):
                 prev_trans += ' ('+str(diff)+') '
                 all_lines[count-1][-1] = prev_trans
             # Micropauses
-            elif diff > 0.1 and diff < 0.2:
+            elif diff > micropause_low and diff < micropause_high:
                 prev_trans += ' (.) '
                 all_lines[count-1][-1] = prev_trans
             # Very large pauses
-            elif diff > 2.5: 
+            elif diff > very_large_pause or special == True: 
                 new_item = ['*PPP', prev_end , curr_start , '('+str(diff)+') ']
                 all_lines.insert(count,new_item)
                 pos = prev_trans.rfind('.')
@@ -685,12 +840,40 @@ def extra_spaces(all_lines):
     return all_lines
 
 
+# Function that gets header values to be used
+# for building CHAT file
+def define_headers(flag):
+    if flag == False:
+        corpus_name = 'In_Conversation_Corpus'
+        language = 'eng'
+        speaker1_gender = 'male'
+        speaker2_gender = 'male'
+        corpus_location = 'Hi_Lab'
+        location = 'HI Lab'
+        room_layout = 'Hi Lab duplex'
+        situation = 'Laboratory'
+        speaker1_role = 'Unidentified'
+        speaker2_role = 'Unidentified'
+    else:
+        corpus_name = raw_input('Specify the corpus name\n')
+        language = raw_input('Specify the language code\n')
+        speaker1_gender = raw_input("Specify the first speaker's gender\n")
+        speaker1_role = raw_input('Specify speaker 1 role\n')
+        speaker2_gender = raw_input("Specify the second speaker's gender\n")
+        speaker2_role = raw_input('Specify speaker 2 role\n')
+        corpus_location = raw_input('Specify the location where corpus was created\n')
+        location = raw_input('Specify the current location\n')
+        room_layout = raw_input('Specify the room layout\n')
+        situation = raw_input('Specify the situation\n')
+
+    headers_CHAT = {'corpus_name':corpus_name,'language':language,'speaker1_gender': speaker1_gender, 'speaker2_gender' : speaker2_gender, 'corpus_location' : corpus_location, 'room_layout' : room_layout, 'situation': situation, 'location':location,'role1':speaker1_role,'role2':speaker2_role}
+    return headers_CHAT
 
 
 
 # Function that builds a CHAT file from 
 # data formatted for the CSV format
-def build_CHAT(all_lines,name1,name2,audio_name):
+def build_CHAT(all_lines,name1,name2,audio_name,flag):
     for item in all_lines:
         item = [unicode(x) for x in item]
     id1 = name1[:3].upper()
@@ -699,15 +882,16 @@ def build_CHAT(all_lines,name1,name2,audio_name):
         id1 = id1[:2]+'1'
         id2 = id2[:2]+'2'
     with io.open('combined.cha',"w",encoding = 'utf-8') as outfile:
-        outfile.write(u'@Begin\n@Languages:\teng\n@Participants:\t')
-        outfile.write(unicode(id1)+u' '+unicode(name1)+u' Unidentified, '+unicode(id2)+u' '+unicode(name2)+u' Unidentified\n')
+        headers = define_headers(flag)
+        outfile.write(u'@Begin\n@Languages:\t'+headers['language']+'\n@Participants:\t')
+        outfile.write(unicode(id1)+u' '+unicode(name1)+u' '+headers['role1']+', '+unicode(id2)+u' '+unicode(name2)+u' '+headers['role2']+'\n')
         outfile.write(u'@Options:\tCA\n')
-        outfile.write(u'@ID:\teng|In_Conversation_Corpus|'+unicode(id1)+'||male|||Unidentified|||'+'\n')
-        outfile.write(u'@ID:\teng|In_Conversation_Corpus|'+unicode(id2)+'||male|||Unidentified|||'+'\n')
+        outfile.write(u'@ID:\t'+headers['language']+'|'+headers['corpus_name']+'|'+unicode(id1)+'||'+headers['speaker1_gender']+'|||'+headers['role1']+'|||'+'\n')
+        outfile.write(u'@ID:\t'+headers['language']+'|'+headers['corpus_name']+'|'+unicode(id2)+'||'+headers['speaker2_gender']+'|||'+headers['role2']+'|||'+'\n')
         outfile.write(u'@Media:\t'+unicode(audio_name)+u',audio\n')
-        outfile.write(u'@Comment:\tIn_Conversation_Corpus, Hi_Lab\n')
-        outfile.write(u'@Transcriber:\tSTT_system\n@Location:\tHI Lab\n@Room Layout:\tHi Lab duplex\n')
-        outfile.write(u'@Situation:\tLaboratory\n@New Episode\n')
+        outfile.write(u'@Comment:\t'+headers['corpus_name']+', '+headers['corpus_location']+'\n')
+        outfile.write(u'@Transcriber:\tSTT_system\n@Location:\t'+headers['location']+'\n@Room Layout:\t'+headers['room_layout']+'\n')
+        outfile.write(u'@Situation:\t'+headers['situation']+'\n@New Episode\n')
         for item in all_lines:
             name = item[0]
             start = int(item[1]*1000)
@@ -751,23 +935,33 @@ def build_CHAT(all_lines,name1,name2,audio_name):
 
 
 
-def combined_post_processing_single(all_lines):
-	all_lines = extra_spaces(all_lines)
-	all_lines = overlaps(all_lines)
-	all_lines = pauses(all_lines)
-	all_lines = add_end_spacing(all_lines)
-	all_lines = combined_same_concat(all_lines)
-	all_lines = eol_delim(all_lines)
-	all_lines = rem_pause_ID(all_lines)
-	all_lines = comment_hesitation(all_lines)
-	all_lines = gaps(all_lines)
-	all_lines = extra_spaces(all_lines)
-	all_lines = extra_spaces(all_lines)
-	return all_lines
+def combined_post_processing_single(all_lines,thresh_dict):
+    dec_global_thresholds(thresh_dict)
+    all_lines = extra_spaces(all_lines)
+    all_lines = overlaps(all_lines)
+    all_lines = pauses(all_lines)
+    all_lines = add_end_spacing(all_lines)
+    all_lines = combined_same_concat(all_lines)
+    all_lines = eol_delim(all_lines)
+    all_lines = rem_pause_ID(all_lines)
+    all_lines = comment_hesitation(all_lines)
+    all_lines = gaps(all_lines)
+    all_lines = extra_spaces(all_lines)
+    all_lines = extra_spaces(all_lines)
+    return all_lines
 
 
 
 
+# Function that removes a line with very large pause
+def rem_very_large_pause(all_lines):
+    count = 0
+    new_lines = []
+    while count < len(all_lines):
+        if all_lines[count][0] != '*PPP':
+            new_lines.append(all_lines[count])
+        count+=1
+    return new_lines
 
 
 
