@@ -35,7 +35,9 @@ b) Using the binary:
 
 3. Build prerequisites
 You'll need some python libraries, which can be installed using python's pip packaing system:
+
 * easy_install pip
+
 Then install the following libraries:
 * pip install –-upgrade Watson-developer-cloud
 * pip install pydub
