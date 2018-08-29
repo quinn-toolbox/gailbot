@@ -58,7 +58,7 @@ Then install the following libraries:
 
 Use the following command to run gailbot:
 
-* python driver.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
+* python gailbot.py -credentials [Bluemix Username]:[Bluemix Password] -files [one or two MXF/Wav file names] -names [One or two speaker names]
 * Follow Gailbot's prompts to generate a transcript.
 
 **NOTE:** Always copy and paste the custom model ID without punctuation marks when/if propmted by Gailbot.
