@@ -146,12 +146,7 @@ def add_corpus(username, password, filename,customID):
 	   print r.text
 	   sys.exit(-1)
 
-	##########################################################################
-	# Step 3: Get status of corpus file just added.
-	# After corpus is uploaded, there is some analysis done to extract OOVs.
-	# One cannot upload a new corpus or words while this analysis is on-going so
-	# we need to loop until the status becomes 'analyzed' for this corpus.
-	##########################################################################
+
 	print "Checking status of corpus analysis..."
 	uri = "https://stream.watsonplatform.net/speech-to-text/api/v1/customizations/"+customID+"/corpora/"+corpus_name
 	r = requests.get(uri, auth=(username,password), verify=False, headers=headers)
@@ -213,10 +208,7 @@ def add_multiple_words(username,password,interim_data,customID):
 
 # Function that trains the model with the input data provided.
 def train_model(username,password,customID):
-	##########################################################################
-	# After starting this step, need to check its status and wait until the
-	# status becomes 'available'.
-	##########################################################################
+
 
 	print "\nTraining custom model..."
 	uri = "https://stream.watsonplatform.net/speech-to-text/api/v1/customizations/"+customID+"/train"
@@ -229,9 +221,6 @@ def train_model(username,password,customID):
 	   print "Training failed to start - exiting!"
 	   sys.exit(-1)
 
-	##########################################################################
-	# Get status of training and loop until done
-	##########################################################################
 	uri = "https://stream.watsonplatform.net/speech-to-text/api/v1/customizations/"+customID
 	r = requests.get(uri, auth=(username,password), verify=False, headers=headers)
 	respJson = r.json()
