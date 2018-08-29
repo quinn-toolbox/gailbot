@@ -39,7 +39,7 @@ You'll need some python libraries, which can be installed using python's pip pac
 * easy_install pip
 
 Then install the following libraries:
-* pip install –-upgrade Watson-developer-cloud
+* pip install Watson-developer-cloud
 * pip install pydub
 
 4. Create an account with IBM so you can use Watson's speech-to-text service:
