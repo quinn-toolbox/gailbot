@@ -60,8 +60,28 @@ Use the following command to run gailbot:
 
 ## Options
 
-**File Constraints**
-Gailbot currently accepts '.wav' audio files and '.MXF' video files.
+## Flags
+
+* -headers 
+** This flag enables the user to type in metadata (e.g. demographic information as per [CHAT headers](https://talkbank.org/manuals/CHAT.html#_Toc522553724))
+* -thresholds 
+** This flag allows the user to specify precision timing of gaps, latches, pauses, micropauses, and TCU cut-offs in seconds:
+*** normal_gap = 0.3
+*** latch_low = 0.01
+*** latch_high = 0.05
+*** normal_pause_low = 0.2
+*** normal_pause_high = 1.0
+*** micropause_low = 0.1
+*** micropause_high = 0.2
+*** very_large_pause = 1.0
+*** TCU_break = 0.1
+** The user can also select pre-set values for 'slow', 'medium', and 'fast' paced dialogue.
+** **Note**: the values above are the 'medium' (default) values.
+
+## Compatible media file types
+* Gailbot currently accepts '.wav' audio files (and treats each as a distinct audio channel)
+* '.MXF' video files (and splits them into two distinct wav files - one per audio channel)
+* mp4, mov, avi, m4v video files (and analyzes them using a dialogue model)
 
 ##  Custom and Acoustic Language Models:
 Gailbot's Custom language model is meant to expand on Watson's existing word dictionary to transcribe specialized contexts. 
