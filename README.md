@@ -34,8 +34,10 @@ b) Using the binary:
 * https://talkbank.org/software/
 
 3. Build prerequisites
-Run the following command on the command line to install Gailbot's pre-requisite libraries:
-* pip install –upgrade Watson-developer-cloud
+You'll need some python libraries, which can be installed using python's pip packaing system:
+* easy_install pip
+Then install the following libraries:
+* pip install –-upgrade Watson-developer-cloud
 * pip install pydub
 
 4. Create an account with IBM so you can use Watson's speech-to-text service:
