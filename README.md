@@ -34,11 +34,15 @@ b) Using the binary:
 * https://talkbank.org/software/
 
 3. Build prerequisites
-You'll need some python libraries, which can be installed using python's pip packaing system:
+
+Gailbot is written in python, you'll need version >=2.1.15
+
+You'll also need some python libraries, which can be installed using python's pip packaing system. If you don't have it, you can install it with:
 
 * easy_install pip
 
 Then install the following libraries:
+
 * pip install Watson-developer-cloud
 * pip install pydub
 
