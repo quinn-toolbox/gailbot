@@ -31,12 +31,20 @@ def file_exists(filename):
 
 # Function that verifies user input based on the option
 def verify_input(option,files,names):
-	if option == '2' or option == '1':
+	if option == '2':
 		if len(files) != 2:
 			print('Error: Two MXF files expected')
 			return False
 		if check_extension(files[0],"MXF") == False or check_extension(files[1],"MXF") == False:
 			print("Error: Verify MXF extesnsion")
+			return False
+		if len(names) != 2:
+			print("Error: Two names expected")
+			return False
+		return True
+	elif option == '1':
+		if len(files) != 2 and len(files) != 1:
+			print('Error: One/Two MXF files expected')
 			return False
 		if len(names) != 2:
 			print("Error: Two names expected")
