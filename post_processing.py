@@ -873,7 +873,7 @@ def define_headers(flag):
 
 # Function that builds a CHAT file from 
 # data formatted for the CSV format
-def build_CHAT(all_lines,name1,name2,audio_name,flag):
+def build_CHAT(all_lines,name1,name2,audio_name,flag,out_dir_name):
     for item in all_lines:
         item = [unicode(x) for x in item]
     id1 = name1[:3].upper()
@@ -881,7 +881,7 @@ def build_CHAT(all_lines,name1,name2,audio_name,flag):
     if id1 == id2:
         id1 = id1[:2]+'1'
         id2 = id2[:2]+'2'
-    with io.open('combined.cha',"w",encoding = 'utf-8') as outfile:
+    with io.open(out_dir_name+'combined.cha',"w",encoding = 'utf-8') as outfile:
         headers = define_headers(flag)
         outfile.write(u'@Begin\n@Languages:\t'+headers['language']+'\n@Participants:\t')
         outfile.write(unicode(id1)+u' '+unicode(name1)+u' '+headers['role1']+', '+unicode(id2)+u' '+unicode(name2)+u' '+headers['role2']+'\n')

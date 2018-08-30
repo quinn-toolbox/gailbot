@@ -46,6 +46,14 @@ def verify_input(option,files,names):
 		if len(files) != 2 and len(files) != 1:
 			print('Error: One/Two MXF files expected')
 			return False
+		if len(files) == 1:
+			if check_extension(files[0],"MXF") == False:
+				print("Error: Verify MXF extesnsion")
+				return False
+		elif len(files) == 2:
+			if check_extension(files[0],"MXF") == False or check_extension(files[1],"MXF") == False:
+				print("Error: Verify MXF extesnsion")
+				return False
 		if len(names) != 2:
 			print("Error: Two names expected")
 			return False
@@ -207,25 +215,28 @@ def verify_files(all_files):
 	return True
 
 # Function that extracts audio from video files
-def extract_audio(in_files):
+def extract_audio(in_files,out_dir_name):
 	if check_extension(in_files,"MXF") == True:
-		new_path = in_files[:in_files.rfind('.')]
-		command = "ffmpeg -i "+in_files+" -map 0:1 -c copy -acodec pcm_s16le -ar 16000 "+ new_path +"-speaker1.wav -map 0:2 -c copy -acodec pcm_s16le -ar 16000 "+ new_path +"-speaker2.wav"
+		if in_files.find("/") != -1:
+			new_path = in_files[in_files.rfind("/")+1:in_files.rfind(".")]
+		else:
+			new_path = in_files[:in_files.rfind('.')]
+		command = "ffmpeg -i "+in_files+" -map 0:1 -c copy -acodec pcm_s16le -ar 16000 "+out_dir_name+ new_path +"-speaker1.wav -map 0:2 -c copy -acodec pcm_s16le -ar 16000 "+out_dir_name+ new_path +"-speaker2.wav"
 		os.system(command)
-		return new_path
+		return out_dir_name+new_path
 
 # Function that extracts audio from a single channel file
-def extract_audio_single(in_files):
+def extract_audio_single(in_files,out_dir_name):
 	if check_extension(in_files,"MXF") == True:
 		new_path = in_files[:in_files.rfind('.')]
-		command = "ffmpeg -i "+in_files+" -acodec pcm_s16le -ar 16000 "+new_path+"-speaker.wav"
+		command = "ffmpeg -i "+in_files+" -acodec pcm_s16le -ar 16000 "+out_dir_name+new_path+"-speaker.wav"
 		os.system(command)
-		return new_path
+		return out_dir_name+new_path
 
 
 
 # Fucntion that overlays the audio
-def overlay(file1,file2):
+def overlay(file1,file2,out_dir_name):
 
 	pre_1 = ''
 	if file1.find('/') != -1:
@@ -249,7 +260,7 @@ def overlay(file1,file2):
 		print(audio1)
 		print(audio2)
 
-		command = "ffmpeg -i "+audio1+" -i "+audio2+ " -filter_complex amix=inputs=2:duration=longest:dropout_transition=3 "+new_name
+		command = "ffmpeg -i "+audio1+" -i "+audio2+ " -filter_complex amix=inputs=2:duration=longest:dropout_transition=3 "+out_dir_name+new_name
 		os.system(command)
 		return new_name
 
@@ -467,7 +478,7 @@ def concat_csv(num_chunks):
 
 # Function that concatenates the csv file for 
 # a single speaker.
-def concat_csv_single(num_chunks):
+def concat_csv_single(num_chunks,out_dir_name):
 	time_diff_ms = CHUNK_SPLIT_MS/1000
 	speaker_1_list = []
 	for i in range(num_chunks):
@@ -482,24 +493,50 @@ def concat_csv_single(num_chunks):
 				item[2] = str(item[2])
 				speaker_1_list.append(item)
 		os.remove(name1)
-	writeCSV(speaker_1_list,'separate-1.csv')
+	writeCSV(speaker_1_list,out_dir_name+'separate-1.csv')
 
 
 
 # Function that takes one of the following file formats
 # and converts that to a wav file.
-def extract_convert_wav(files):
+def extract_convert_wav(files,out_dir_name):
+	print(out_dir_name)
 	new_files = []
 	for file in files:
 		if check_extension(file,'wav') == True or check_extension(file,"MXF") == True:
 			return files
 		name = file[:file.rfind(".")]
 		ext = file[file.rfind(".")+1:]
-		command = "ffmpeg -i "+file+ " -acodec pcm_s16le -ar 16000 "+name+".wav"
+		command = "ffmpeg -i "+file+ " -acodec pcm_s16le -ar 16000 "+out_dir_name+name+".wav"
 		os.system(command)
 		new_files.append(name+".wav")
 
-	return new_files
+	return out_dir_name+new_path
+
+
+# Function that creates a new folder based in the input
+# file names
+def out_dir(in_files):
+	if len(in_files) == 1:
+		try:
+			file1 = in_files[0]
+			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]
+			os.mkdir(new_name)
+		except OSError:
+			print(new_name+ " directory already exists\nExiting...\n")
+			sys.exit(-1)
+
+	elif len(in_files) == 2:
+		try:
+			file1 = in_files[0]
+			file2 = in_files[1]
+			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]+file2[file2.rfind("/")+1:file2.rfind(".")]
+			os.mkdir(new_name)
+		except OSError:
+			print(new_name+ " directory already exists\nExiting...\n")
+			sys.exit(-1)
+	return new_name
+
 
 
 
@@ -540,6 +577,12 @@ if __name__ == '__main__':
 		print('Exiting...')
 		sys.exit(-1)
 
+
+	# Creating the output directory based on input files
+	out_dir_name = out_dir(args.in_files)
+	out_dir_name = "./"+out_dir_name+"/"
+	print(out_dir_name)
+
 	# Sorting speaker names in alphabetical order
     # This is to ensure correct name is attributed to
     # the correct speaker at the CSV build stage.
@@ -552,7 +595,7 @@ if __name__ == '__main__':
 	args.credentials = [args.credentials[:args.credentials.rfind(':')] ,args.credentials[args.credentials.rfind(":")+1:]]
 
 	# Changing the audio files if not in wav or mxf format
-	args.in_files = extract_convert_wav(args.in_files)
+	args.in_files = extract_convert_wav(args.in_files,out_dir_name)
 
 	# Getting audio from MXF files
 	MXF = True
@@ -562,18 +605,18 @@ if __name__ == '__main__':
 			break
 	if MXF ==  True:
 		if trans_type == '1':
-			new_path = extract_audio(args.in_files[0])
+			new_path = extract_audio(args.in_files[0],out_dir_name)
 			file1 = new_path+'-speaker1.wav'
 			file2 = new_path+"-speaker2.wav"
 			args.in_files = [file1, file2]
 		elif trans_type == '4':
-			new_path = extract_audio_single(args.in_files[0])
+			new_path = extract_audio_single(args.in_files[0],out_dir_name)
 			path = new_path+'-speaker.wav'
 			args.in_files = [path]
 		elif trans_type == '2':
-			new_path = extract_audio_single(args.in_files[0])
+			new_path = extract_audio_single(args.in_files[0],out_dir_name)
 			file1 = new_path+'-speaker.wav'
-			new_path = extract_audio_single(args.in_files[1])
+			new_path = extract_audio_single(args.in_files[1],out_dir_name)
 			file2 = new_path+"-speaker.wav"
 			args.in_files = [file1, file2]
 
@@ -599,7 +642,7 @@ if __name__ == '__main__':
 				print('Exiting...')
 				sys.exit(-1)
 
-			new_name = overlay(args.in_files[0],args.in_files[1])
+			new_name = overlay(args.in_files[0],args.in_files[1],out_dir_name)
 			orig1 = args.in_files[0]
 			orig2 = args.in_files[1]
 			# Sending in the file if they were chunked.
@@ -623,8 +666,8 @@ if __name__ == '__main__':
 				with open('1.json.txt') as speaker2_data:
 					speaker2_result = json.load(speaker2_data)	
 				seperate_output = build_seperate_CSV(speaker1_result,speaker2_result,args.Names[0],args.Names[1])
-				writeCSV(seperate_output[0],'separate-1-{0}.csv'.format(i))
-				writeCSV(seperate_output[1],'separate-2-{0}.csv'.format(i))
+				writeCSV(seperate_output[0],out_dir_name+'separate-1-{0}.csv'.format(i))
+				writeCSV(seperate_output[1],out_dir_name+'separate-2-{0}.csv'.format(i))
 				if os.path.exists('0.json.txt'):
 					os.remove('0.json.txt')
 				if os.path.exists('1.json.txt'):
@@ -650,11 +693,11 @@ if __name__ == '__main__':
 				with open('0.json.txt') as speaker1_data:
 					speaker1_result  = json.load(speaker1_data)
 				output = build_single_CSV(speaker1_result,args.Names[0],args.Names[1])
-				writeCSV(output,'separate-1-{0}.csv'.format(i))
+				writeCSV(output,out_dir_name+'separate-1-{0}.csv'.format(i))
 				if os.path.exists('0.json.txt'):
 					os.remove('0.json.txt')
 				os.remove(file1name)
-			concat_csv_single(num_chunks[0])
+			concat_csv_single(num_chunks[0],out_dir_name)
 			args.in_files[0] = orig1
 
 	elif (trans_type == '1' or trans_type == '2' or trans_type == '3' or trans_type == '7') and len(args.in_files) == 2:
@@ -662,7 +705,7 @@ if __name__ == '__main__':
 			os.remove('0.json.txt')
 		if os.path.exists('1.json.txt'):
 			os.remove('1.json.txt')	
-		new_name = overlay(args.in_files[0],args.in_files[1])
+		new_name = overlay(args.in_files[0],args.in_files[1],out_dir_name)
 		new_name = new_name[:new_name.rfind('.')]
 		send_call(args.credentials,args.in_files,args.Names,trans_type,len(args.in_files),new_name)
 
@@ -672,8 +715,8 @@ if __name__ == '__main__':
 		with open('1.json.txt') as speaker2_data:
 			speaker2_result = json.load(speaker2_data)	
 		seperate_output = build_seperate_CSV(speaker1_result,speaker2_result,args.Names[0],args.Names[1])
-		writeCSV(seperate_output[0],'separate-1.csv')
-		writeCSV(seperate_output[1],'separate-2.csv')
+		writeCSV(seperate_output[0],out_dir_name+'separate-1.csv')
+		writeCSV(seperate_output[1],out_dir_name+'separate-2.csv')
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 		if os.path.exists('1.json.txt'):
@@ -689,7 +732,7 @@ if __name__ == '__main__':
 		with open('0.json.txt') as speaker1_data:
 			speaker1_result  = json.load(speaker1_data)
 		output = build_single_CSV(speaker1_result,args.Names[0],args.Names[1])
-		writeCSV(output,'separate-1.csv') 
+		writeCSV(output,out_dir_name+'separate-1.csv') 
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 
@@ -711,41 +754,41 @@ if __name__ == '__main__':
 
 	# Applying post_processing functions to the data
 	if len(args.in_files) > 1:
-		all_data = post_processing.read_data_double('separate-1.csv','separate-2.csv')
+		all_data = post_processing.read_data_double(out_dir_name+'separate-1.csv',out_dir_name+'separate-2.csv')
 		if len(all_data[0]) > 0 and len(all_data[1]) > 0:
 			all_data[0] = post_processing.seperate_postprocessing(all_data[0],threshold_dict)
 			all_data[1] = post_processing.seperate_postprocessing(all_data[1],threshold_dict)
 			#os.remove('separate-1.csv')
 			#os.remove('separate-2.csv')
-			writeCSV(all_data[0],'speaker-1-new.csv')
-			writeCSV(all_data[1],'speaker-2-new.csv')
+			writeCSV(all_data[0],out_dir_name+'speaker-1-new.csv')
+			writeCSV(all_data[1],out_dir_name+'speaker-2-new.csv')
 
 		# Combining and doing postprocessing on the two individual speaker files.
 		combined_output = post_processing.combined_postprocessing(all_data[0],all_data[1],threshold_dict)
-		writeCSV(combined_output,'combined.csv')
-		post_processing.build_CHAT(combined_output,args.Names[0],args.Names[1],new_name,cust_headers)
+		writeCSV(combined_output,out_dir_name+'combined.csv')
+		post_processing.build_CHAT(combined_output,args.Names[0],args.Names[1],new_name,cust_headers,out_dir_name)
 
 	elif len(args.in_files) == 1:
-		all_data = post_processing.read_data_single('separate-1.csv')
+		all_data = post_processing.read_data_single(out_dir_name+'separate-1.csv')
 		all_data = post_processing.seperate_postprocessing(all_data,threshold_dict)
 		#os.remove('separate-1.csv')
-		writeCSV(all_data,'separate-1-new.csv')
+		writeCSV(all_data,out_dir_name+'separate-1-new.csv')
 		combined_output = post_processing.combined_post_processing_single(all_data,threshold_dict)
-		writeCSV(combined_output,'combined.csv')
+		writeCSV(combined_output,out_dir_name+'combined.csv')
 		new_name = args.in_files[0]
-		post_processing.build_CHAT(combined_output,'SP1','SP2',new_name[:new_name.rfind('.')],cust_headers)
+		post_processing.build_CHAT(combined_output,'SP1','SP2',new_name[:new_name.rfind('.')],cust_headers,out_dir_name)
 		#os.remove('separate-1.csv')
 
 	# Creating and indenting the CA files.
-	os.system('./converter chat2calite combined.cha')
-	os.system('./indent combined.S.ca')
-	os.remove('combined.S.ca')
-	os.rename('combined.S.indnt.cex','combined.S.ca')
+	os.system('./jeffersonize chat2calite '+out_dir_name+'combined.cha')
+	os.system('./indent '+out_dir_name+'combined.S.ca')
+	os.remove(out_dir_name+'combined.S.ca')
+	os.rename(out_dir_name+'combined.S.indnt.cex',out_dir_name+'combined.S.ca')
 
 	# Renaming the CHAT, CA, and combined-csv files.
-	os.rename('combined.cha',new_name[:new_name.rfind('.')]+'.cha')
-	os.rename('combined.S.ca',new_name[:new_name.rfind('.')]+'.S.ca')
-	os.rename('combined.csv',new_name[:new_name.rfind('.')]+'.csv')
+	os.rename(out_dir_name+'combined.cha',out_dir_name+new_name[:new_name.rfind('.')]+'.cha')
+	os.rename(out_dir_name+'combined.S.ca',out_dir_name+new_name[:new_name.rfind('.')]+'.S.ca')
+	os.rename(out_dir_name+'combined.csv',out_dir_name+new_name[:new_name.rfind('.')]+'.csv')
 
 
 
