@@ -226,6 +226,14 @@ def extract_audio_single(in_files):
 
 # Fucntion that overlays the audio
 def overlay(file1,file2):
+
+	pre_1 = ''
+	if file1.find('/') != -1:
+		pre_1 = file1[:file1.rfind("/")+1]
+	pre_2 = ''
+	if file1.find('/') != -1:
+		pre_2 = file1[:file1.rfind("/")+1]
+
 	if check_extension(file1,'wav') == True and check_extension(file2,'wav') == True:
 		if file1.find('/') != -1:
 			audio1 = file1[file1.rfind('/')+1:file1.rfind('.')]
@@ -236,8 +244,10 @@ def overlay(file1,file2):
 		else:
 			audio2 = file2[:file2.rfind('.')]
 		new_name = audio1+"-"+audio2+'-combined.wav'
-		audio1 = audio1 +'.wav'
-		audio2 = audio2 +'.wav'
+		audio1 = pre_1+audio1 +'.wav'
+		audio2 = pre_2+audio2 +'.wav'
+		print(audio1)
+		print(audio2)
 
 		command = "ffmpeg -i "+audio1+" -i "+audio2+ " -filter_complex amix=inputs=2:duration=longest:dropout_transition=3 "+new_name
 		os.system(command)
