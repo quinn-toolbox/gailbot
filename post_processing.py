@@ -153,16 +153,16 @@ def get_float_int_input():
 
 # Function that reads data from a single csv file
 def read_data_single(file1):
-	data1 = []
-	with open(file1,'rb') as f:
-		reader = csv.reader(f)
-		data = list(reader)
-		for item in data:
-			item[1] = float(item[1])
-			item[2] = float(item[2])
-			data1.append(item)
-	all_data = data1
-	return all_data	
+    data1 = []
+    with open(file1,'rb') as f:
+        reader = csv.reader(f)
+        data = list(reader)
+        for item in data:
+            item[1] = float(item[1])
+            item[2] = float(item[2])
+            data1.append(item)
+            all_data = data1
+    return all_data	
 
 
 # Function that reads the csv data for post_processig
@@ -209,6 +209,9 @@ def remove_confidence(all_lines):
 # Function that creates utterances based on a threshold for
 # the individual speakers.
 def create_utterances(all_lines,threshold):
+
+
+
     new_lines = []
     count = 0
     new = True

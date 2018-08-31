@@ -68,6 +68,9 @@ from autobahn.twisted.websocket import WebSocketClientProtocol, \
 from twisted.python import log
 from twisted.internet import ssl, reactor
 
+from watson_developer_cloud import SpeechToTextV1
+from watson_developer_cloud.websocket import RecognizeCallback
+
 try:
     raw_input          # Python 2
 except NameError:
@@ -214,9 +217,8 @@ class WSInterfaceProtocol(WebSocketClientProtocol):
                 'max_alternatives': 3,
                 'timestamps': True,
                 'word_confidence': True,
-                'profanity_filter' : False,
+                'profanity_filter' : True,
                 'speaker_labels': True}
-
 
         #print("sendMessage(init)")
         # send the initialization parameters
@@ -226,8 +228,8 @@ class WSInterfaceProtocol(WebSocketClientProtocol):
         # STT service)
         print(self.uttFilename)
         with open(str(self.uttFilename), 'rb') as f:
-            self.bytesSent = 0
-            dataFile = f.read()
+             self.bytesSent = 0
+             dataFile = f.read()
         self.maybeSendChunk(dataFile)
 
 
@@ -399,8 +401,9 @@ if __name__ == '__main__':
     ###
     # Running the custom model interface script.
     model_info = custom_model(username = args.credentials[0],password = args.credentials[1])
-    if model_info != None:
-        args.lm_custom_id = model_info
+    args.model = model_info['base']
+    if model_info['cust'] != None:
+        args.lm_custom_id = model_info['cust']
     ###
 
     ###
@@ -444,6 +447,8 @@ if __name__ == '__main__':
     	url += "&acoustic_customization_id=" + args.am_custom_id
     if args.lm_custom_id != None:
         url += "&customization_id=" + args.lm_custom_id
+
+
 
     summary = {}
     factory = WSInterfaceFactory(q, summary, args.dirOutput, args.contentType,

@@ -18,16 +18,19 @@ headers = {'Content-Type' : "application/json"}
 
 # Function providing user-API interface
 def custom_model(username, password):
+	out = {"base": "en-US_BroadbandModel", "cust" : None}
 	option = raw_input("Press 1 for default language model (en-US_BroadbandModel)\nPress 2 for custom language model options\n")
 	if option == '1':
-		return None
+		return out
 	while True:
 		option2 = raw_input("Press 1 to select custom model\nPress 2 to delete custom model\nPress 3 to create new model\nPress 4 for default model\nPress 5 to list available API models\nPress 6 for information on a specific base model (Name required)\n")
 		if option2 == '1':
 			get_model_list(username,password)
+			print("NOTE: The custom language model's base model must be the same as the selected base model")
 			customID = raw_input("Enter custom model ID from above list (Excluding punctuation marks!)\nPress 0 to go back to options\n")
 			if customID != '0':
-				return customID
+				out["cust"] = customID
+				return out
 			local_option = raw_input("Press 'Y' to exit\nPress 'N' to repeat options\n")
 			if local_option == 'Y' or local_option == 'y':
 				break
@@ -84,10 +87,13 @@ def custom_model(username, password):
 			if local_option == 'Y' or local_option == 'y':
 				break
 		elif option2 == '4':
-			return None
+			return out
 		elif option2 == '5':
 			list_models(username,password)
 			print("To use any of the base models, use option 1 and enter model name\n")
+			name = raw_input("Enter model name\n")
+			out["base"] = name
+			return out
 		elif option2 == '6':
 			modelinfo = raw_input("Enter the name of the base model\n")
 			get_basemodel_info(username,password,modelinfo)

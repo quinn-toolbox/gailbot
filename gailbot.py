@@ -112,6 +112,26 @@ def verify_input(option,files,names):
 		if len(names) != 2:
 			print("Error: Two names expected")
 			return False
+	elif option == '8':
+		if len(files) != 1:
+			print("Error: One mp3 file expected")
+			return False
+		if check_extension(files[0],'mp3') == False:
+			print("Error: Please verify mp3 extension")
+			return False
+		if len(names) != 2:
+			print("Error: Two names expected")
+			return False
+	elif option == '9':
+		if len(files) != 2:
+			print("Error: Two mp3 file expected")
+			return False
+		if check_extension(files[0],'mp3') == False or check_extension(files[1],"mp3") == False:
+			print("Error: Please verify mp3 extension")
+			return False
+		if len(names) != 2:
+			print("Error: Two names expected")
+			return False
 		return True
 
 
@@ -128,6 +148,8 @@ def get_type_input():
 	print('Press 5 to transcribe a single wav using the dialogue model')
 	print('Press 6 to transcribe a single mp4,mov,mv4, or avi file using the dialogue model')
 	print('Press 7 to transcribe two mp4,mov,mv4, or avi files corresponding to the same conversation')
+	print('Press 8 to transcribe a single mp3 file using the dialogue model')
+	print('Press 9 to transcribe two mp3 files as part of the same conversation')
 	while True:
 		try:
 			option = raw_input('Please enter your  option\n')
@@ -180,6 +202,15 @@ def send_call(credentials,filenames,speaker_names, option,num_files,new_name):
 	elif (option == '5' or option == '6') and num_files == 1:
 		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
 					" -files "+filenames[0]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+filenames[0]
+		os.system(command)
+	elif option == '8':
+		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
+					" -files "+filenames[0]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+filenames[0] + " -type audio/mp3"
+		os.system(command)
+	elif option == '9':
+		command = "python STT.py -credentials "+credentials[0]+":"+credentials[1]+" -model en-US_BroadbandModel"\
+					" -files "+filenames[0]+" "+filenames[1]+ " -names "+speaker_names[0]+" "+speaker_names[1]+" -audio "+new_name + " -type audio/mp3"
+
 		os.system(command)
 	else:
 		print('Incorrect Option\nExiting...')
@@ -281,9 +312,9 @@ def build_single_CSV(json1,name1,name2):
 	for item in json1:
 		if item['results'][0]['final'] == True:
 	  		new_json.append(item)
-	  	elif 'speaker_labels' in item:
+		elif 'speaker_labels' in item:
 	  		times.append(item['speaker_labels'])
-
+	  	
 
 	all_lines = []
 
@@ -351,9 +382,10 @@ def build_single_CSV(json1,name1,name2):
 					lines[0] = 'SP2'
 				else:
 					lines[0] = 'SP1'
+			lines.append(time[-1])
 		else:
 			lines[0] = 'SP1'
-
+			lines.append(0)
 
 
 	return new_all_lines
@@ -500,10 +532,9 @@ def concat_csv_single(num_chunks,out_dir_name):
 # Function that takes one of the following file formats
 # and converts that to a wav file.
 def extract_convert_wav(files,out_dir_name):
-	print(out_dir_name)
 	new_files = []
 	for file in files:
-		if check_extension(file,'wav') == True or check_extension(file,"MXF") == True:
+		if check_extension(file,'wav') == True or check_extension(file,"MXF") == True or check_extension(file,"mp3") == True:
 			return files
 		name = file[:file.rfind(".")]
 		ext = file[file.rfind(".")+1:]
@@ -523,7 +554,7 @@ def out_dir(in_files):
 			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]
 			os.mkdir(new_name)
 		except OSError:
-			print(new_name+ " directory already exists\nExiting...\n")
+			print("Error: Directory '"+new_name+"'' already exists\nExiting...\n")
 			sys.exit(-1)
 
 	elif len(in_files) == 2:
@@ -533,7 +564,7 @@ def out_dir(in_files):
 			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]+file2[file2.rfind("/")+1:file2.rfind(".")]
 			os.mkdir(new_name)
 		except OSError:
-			print(new_name+ " directory already exists\nExiting...\n")
+			print("Error: Directory '"+new_name+"'' already exists\nExiting...\n")
 			sys.exit(-1)
 	return new_name
 
@@ -581,7 +612,6 @@ if __name__ == '__main__':
 	# Creating the output directory based on input files
 	out_dir_name = out_dir(args.in_files)
 	out_dir_name = "./"+out_dir_name+"/"
-	print(out_dir_name)
 
 	# Sorting speaker names in alphabetical order
     # This is to ensure correct name is attributed to
@@ -594,7 +624,7 @@ if __name__ == '__main__':
 
 	args.credentials = [args.credentials[:args.credentials.rfind(':')] ,args.credentials[args.credentials.rfind(":")+1:]]
 
-	# Changing the audio files if not in wav or mxf format
+	# Changing the audio files if not in wav or mxf format or mp3
 	args.in_files = extract_convert_wav(args.in_files,out_dir_name)
 
 	# Getting audio from MXF files
@@ -700,7 +730,7 @@ if __name__ == '__main__':
 			concat_csv_single(num_chunks[0],out_dir_name)
 			args.in_files[0] = orig1
 
-	elif (trans_type == '1' or trans_type == '2' or trans_type == '3' or trans_type == '7') and len(args.in_files) == 2:
+	elif (trans_type == '1' or trans_type == '2' or trans_type == '3' or trans_type == '7' or trans_type == '9') and len(args.in_files) == 2:
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 		if os.path.exists('1.json.txt'):
@@ -722,7 +752,7 @@ if __name__ == '__main__':
 		if os.path.exists('1.json.txt'):
 			os.remove('1.json.txt')
 
-	elif (trans_type == '4' or trans_type == '5' or trans_type == '6') and len(args.in_files) == 1:
+	elif (trans_type == '4' or trans_type == '5' or trans_type == '6' or trans_type == '8') and len(args.in_files) == 1:
 		if os.path.exists('0.json.txt'):
 			os.remove('0.json.txt')
 		send_call(args.credentials,args.in_files,args.Names,trans_type,len(args.in_files),'')
