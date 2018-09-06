@@ -31,6 +31,10 @@ def file_exists(filename):
 
 # Function that verifies user input based on the option
 def verify_input(option,files,names):
+	# Temp command because dialogue model options have been disabled.
+	if option == '4' or option == '5' or option == '6' or option == '8':
+		return False
+	###
 	if option == '2':
 		if len(files) != 2:
 			print('Error: Two MXF files expected')
@@ -138,17 +142,19 @@ def verify_input(option,files,names):
 
 
 # Function that gets the type input from the user.
+# Dialogue model options have been disabled for now.
+# This is because Watson is not returning speaker labels.
 def get_type_input():
 	print('\n')
 	print('Welcome to Gailbot 2.0!\n')
 	print('Press 1 to transcribe one or two MXF files, with a separate channel for each speaker')
 	print('Press 2 to transcribe two MXF files part of the same conversation, getting audio from each file separately')
 	print('Press 3 to transcribe two wav files corresponding to different speakers in one conversation')
-	print('Press 4 to transcribe a single MXF file with a single channel with using dialogue model')
-	print('Press 5 to transcribe a single wav using the dialogue model')
-	print('Press 6 to transcribe a single mp4,mov,mv4, or avi file using the dialogue model')
+	#print('Press 4 to transcribe a single MXF file with a single channel with using dialogue model')
+	#print('Press 5 to transcribe a single wav using the dialogue model')
+	#print('Press 6 to transcribe a single mp4,mov,mv4, or avi file using the dialogue model')
 	print('Press 7 to transcribe two mp4,mov,mv4, or avi files corresponding to the same conversation')
-	print('Press 8 to transcribe a single mp3 file using the dialogue model')
+	#print('Press 8 to transcribe a single mp3 file using the dialogue model')
 	print('Press 9 to transcribe two mp3 files as part of the same conversation')
 	while True:
 		try:
@@ -552,6 +558,7 @@ def out_dir(in_files):
 		try:
 			file1 = in_files[0]
 			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]
+			new_name = new_name + "-transcript"
 			os.mkdir(new_name)
 		except OSError:
 			print("Error: Directory '"+new_name+"'' already exists\nExiting...\n")
@@ -562,6 +569,7 @@ def out_dir(in_files):
 			file1 = in_files[0]
 			file2 = in_files[1]
 			new_name = file1[file1.rfind("/")+1:file1.rfind(".")]+file2[file2.rfind("/")+1:file2.rfind(".")]
+			new_name = new_name + "-transcript"
 			os.mkdir(new_name)
 		except OSError:
 			print("Error: Directory '"+new_name+"'' already exists\nExiting...\n")
