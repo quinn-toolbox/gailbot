@@ -22,6 +22,7 @@ from operator import itemgetter
 CHUNK_SPLIT_MS = 600000
 CHUNK_SPLIT_BYTES = 80000000
 
+
 # Function that verifies that the given file exists.
 def file_exists(filename):
 	if os.path.is_file(filename) == True:
@@ -484,13 +485,13 @@ def writeCSV(all_lines,name):
 
 
 # Function that concatenates the csv files for chunks
-def concat_csv(num_chunks):
+def concat_csv(num_chunks,out_dir_name):
 	time_diff_ms = CHUNK_SPLIT_MS/1000
 	speaker_1_list = []
 	speaker_2_list = []
 	for i in range(num_chunks):
-		name1 = 'separate-1-{0}.csv'.format(i)
-		name2 = 'separate-2-{0}.csv'.format(i)
+		name1 = out_dir_name+'separate-1-{0}.csv'.format(i)
+		name2 = out_dir_name+'separate-2-{0}.csv'.format(i)
 		with open(name1, 'rb') as f:
 			reader = csv.reader(f)
 			data = list(reader)
@@ -511,8 +512,8 @@ def concat_csv(num_chunks):
 				speaker_2_list.append(item)
 		os.remove(name1)
 		os.remove(name2)
-	writeCSV(speaker_1_list,'speaker-1.csv')
-	writeCSV(speaker_2_list,'speaker-2.csv')
+	writeCSV(speaker_1_list,out_dir_name+'separate-1.csv')
+	writeCSV(speaker_2_list,out_dir_name+'separate-2.csv')
 
 # Function that concatenates the csv file for 
 # a single speaker.
@@ -520,7 +521,7 @@ def concat_csv_single(num_chunks,out_dir_name):
 	time_diff_ms = CHUNK_SPLIT_MS/1000
 	speaker_1_list = []
 	for i in range(num_chunks):
-		name1 = 'separate-1-{0}.csv'.format(i)
+		name1 = out_dir_name+'separate-1-{0}.csv'.format(i)
 		with open(name1, 'rb') as f:
 			reader = csv.reader(f)
 			data = list(reader)
@@ -713,7 +714,7 @@ if __name__ == '__main__':
 				os.remove(file1name)
 				os.remove(file2name)	
 			# Combining all the seperate csv files
-			concat_csv(num_chunks[0])
+			concat_csv(num_chunks[0],out_dir_name)
 
 
 		elif len(args.in_files) == 1:
